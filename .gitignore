@@ -1,0 +1,8 @@
+temp/
+.idea/
+.vscode/
+build/
+iso_root/
+-p/
+*.code-workspace
+*.iso
