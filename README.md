@@ -1,35 +1,18 @@
-# Todo-List
+x86-64 Operating System written in C
 
-This is a list of things I want to do in the operating system.
-The list has no particular order. The things will be done in random order. 
-
-## Todo
-- [ ] AHCI (Advanced Host Controller Interface)
-- [ ] XHCI (Extensible Host Controller Interface)
-- [ ] Filesystem (ext2)
-- [ ] NVMe (Non-Volatile Memory express)
-- [ ] PS/2 Keyboard
-- [ ] PS/2 Mouse
-- [ ] RTC (Real Time Clock)
-- [ ] SATA (Serial AT Attachment)
-- [ ] System Calls
-- [ ] USB
-- [ ] Userland / Ring 3
-- [ ] VFS (Virtual File System)
-
-## Finished
-- [x] ACPI (Advanced Configuration and Power Interface)
-    - [x] HPET (High Precision Event Timer)
-    - [x] MADT (Multiple APIC Description Table)
-- [x] APIC (Advanced Programmable Interrupt Controller)
-    - [x] I/O APIC (I/O Advanced Programmable Interrupt Controller)
-    - [x] LAPIC (Local Advanced Programmable Interrupt Controller)
-- [x] Basic GUI
-- [x] GDT (Global Descriptor Table)
-- [x] IDT (Interrupt Descriptor Table)
-- [x] PCI (Peripheral Component Interconnect)
-- [x] PIC (Programmable Interrupt Controller)
-- [x] PMM (Physical Memory Manager)
-- [x] Scheduler
-- [x] SMP (Symmetric Multiprocessing)
-- [x] VMM (Virtual Memory Manager)
+##TODO:
+[x] Set up GDT
+[ ] Load an IDT so that exceptions and interrupts can be handled.
+[ ] Write a physical memory allocator, a good starting point is a bitmap allocator.
+[ ] Write a virtual memory manager that can map, remap and unmap pages.
+[ ] Begin parsing ACPI tables, the most important one is the MADT since it contains information about the APIC.
+[ ] Start up the other CPUs. stivale2 provides a facility to make this less painful.
+[ ] Set up an interrupt controller such as the APIC.
+[ ] Configure a timer such as the Local APIC timer, the PIT, or the HPET.
+[ ] Implement a scheduler to schedule threads in order make multitasking possible.
+[ ] Design a virtual file system (VFS) and implement it. The traditional UNIX VFS works and saves headaches when porting software, but you can make your own thing too.
+[ ] Implement a simple virtual file system like a memory-only tmpfs to avoid crippling the design of your VFS too much while implementing it alongside real storage [ ]fil esystems.
+[ ] Decide how to abstract devices. UNIX likes usually go for a /dev virtual filesystem containing device nodes and use ioctl() alongside standard FS calls to do [ ]ope rations on them.
+[ ] Get a userland going by loading executables from your VFS and running them in ring 3. Set up a way to perform system calls.
+[ ] Write a PCI driver.
+[ ] Add support for a storage medium, the easiest and most common ones are AHCI and NVMe.
