@@ -7,35 +7,19 @@
 
 terminal_t terminal;
 
+extern void load_gdt();
+
 void kernelMain(stivale2_struct_t* bootloader_data)
 {
-    const char* str = "phoenixOS!\n";
+    const char* str = "PhoenixOS!\n";
     
     terminalInitialize(&terminal, bootloader_data);
     terminalWrite(&terminal, str, 11);
     serialInitialize();
     
-    serialSendb(COM1, 'H');
-    serialSendb(COM1, 'e');
-    serialSendb(COM1, 'l');
-    serialSendb(COM1, 'l');
-    serialSendb(COM1, 'o');
-    serialSendb(COM1, ',');
-    serialSendb(COM1, ' ');
-    serialSendb(COM1, 'W');
-    serialSendb(COM1, 'o');
-    serialSendb(COM1, 'r');
-    serialSendb(COM1, 'l');
-    serialSendb(COM1, 'd');
-    serialSendb(COM1, '!');
-    serialSendb(COM1, '\n');
-    
-    gdt_t* gdt;
-    //gdt_create(gdt);
-    terminalWrite(&terminal, "gdt loaded!", sizeof("gdt loaded!"));
-
+    load_gdt();
     PH_LOG_TRACE("Hello, %s!", "World");
-    
+
     char c_standard[20];
 
     itoa(__STDC_VERSION__, c_standard, 10);

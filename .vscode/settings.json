@@ -13,6 +13,7 @@
         "utility": "cpp",
         "variant": "cpp",
         "serial.h": "c",
-        "stdarg.h": "c"
+        "stdarg.h": "c",
+        "terminal.h": "c"
     }
 }

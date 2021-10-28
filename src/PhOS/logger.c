@@ -3,6 +3,10 @@
 
 #include <stdarg.h>
 
+#include "kernel/terminal.h"
+
+extern terminal_t terminal;
+
 void loggerInitialize(void)
 {
 
@@ -19,6 +23,7 @@ void log(log_level_t log_level, const char* fmt, ...)
     {
         while (*c != '%')
         {
+            if (*c == 0) goto loop_end;
             serialSendb(COM1, *c);
             c++;
         }
@@ -49,10 +54,9 @@ void log(log_level_t log_level, const char* fmt, ...)
                 break;
             }
             case 'x': 
-            
                 break;
         }
     }
-
+    loop_end:
     va_end(args);
 }

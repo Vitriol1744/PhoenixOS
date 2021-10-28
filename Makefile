@@ -3,17 +3,16 @@ KERNEL := myos.elf
 BUILD_DIR := ./build
 SRC_DIRS := ./src
  
-#TODO: Shouldn't use absolute paths!
-CC = ~/dev-tools/x86_64elfgcc/bin/x86_64-elf-gcc
-CXX = ~/dev-tools/x86_64elfgcc/bin/x86_64-elf-g++
-AS = nasm
+CC  = clang
+CXX = clang++
+AS  = nasm
  
 CXXFLAGS = -Wall -Wextra -O2 -pipe
 CCFLAGS = -Wall -Wextra -pipe
-ASMFLAGS = -f elf64
+ASMFLAGS = -f elf64 -fpie
  
 INTERNALLDFLAGS :=     \
-	-fno-pic -fpie \
+	-fno-pic \
 	-Wl,-static,-pie,--no-dynamic-linker,-ztext \
 	-static-pie    \
 	-nostdlib      \
