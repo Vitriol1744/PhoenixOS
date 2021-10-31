@@ -1,0 +1,6 @@
+IndentWidth: 4
+BreakBeforeBraces: Allman
+PointerAlignment: Left
+AllowShortBlocksOnASingleLine: true 
+AllowShortIfStatementsOnASingleLine: Always 
+AllowShortBlocksOnASingleLine: Always

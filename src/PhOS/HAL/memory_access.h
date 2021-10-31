@@ -1,11 +1,11 @@
-#ifndef MEMORY_ACCESS_INTRINSICS_H
-#define MEMORY_ACCESS_INTRINSICS_H
+#ifndef MEMORY_ACCESS_H
+#define MEMORY_ACCESS_H
 
 #include "common.h"
 
-inline static uint32_t farpeekl(uint16_t selector, void* offset)
+inline static dword_t farpeekl(word_t selector, void* offset)
 {
-    uint32_t ret;
+    dword_t ret;
     PH_ASM
     (
         "push %%fs\n\t"
@@ -18,7 +18,7 @@ inline static uint32_t farpeekl(uint16_t selector, void* offset)
     return ret;
 }
 
-static inline void farpokeb(uint16_t selector, void* offset, uint8_t value)
+static inline void farpokeb(word_t selector, void* offset, byte_t value)
 {
     PH_ASM
     ( 
@@ -31,9 +31,9 @@ static inline void farpokeb(uint16_t selector, void* offset, uint8_t value)
     /* TODO: Should "memory" be in the clobber list here? */
 }
 
-inline static uint32_t peekl(uint16_t selector, void* offset)
+inline static dword_t peekl(word_t selector, void* offset)
 {
-    uint32_t ret;
+    dword_t ret;
     PH_ASM
     (
         "push %%fs\n\t"
@@ -44,4 +44,4 @@ inline static uint32_t peekl(uint16_t selector, void* offset)
     );
 }
 
-#endif // MEMORY_ACCESS_INTRINSICS_H
+#endif // MEMORY_ACCESS_H

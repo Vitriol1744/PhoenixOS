@@ -1,34 +1,42 @@
-/* Tell the linker that we want the symbol _start to be our entry point */
 ENTRY(kernelMain)
- 
+
 SECTIONS
 {
-    /* We wanna be placed in the higher half, 2MiB above 0 in physical memory. */
-    /* Since we are going to use PIE, this is just the base load address, but the */
-    /* bootloader will be able to relocate us as it sees fit. */
-    . = 0xffffffff80200000;
- 
-    /* We place the .stivale2hdr section containing the header in its own section, */
-    /* and we use the KEEP directive on it to make sure it doesn't get discarded. */
-    .stivale2hdr : {
-        KEEP(*(.stivale2hdr))
+    kernel_physical_offset = 0xFFFFFFFF80000000;
+    . = kernel_physical_offset + 0x200000;
+
+    .stivale2hdr ALIGN(4K) : AT (ADDR (.stivale2hdr) - kernel_physical_offset)
+    {
+        *(.stivale2hdr)
     }
- 
-    /* Then let's place all the other traditional executable sections afterwards. */
-    .text : {
-        *(.text*)
+
+    .text ALIGN(4K) : AT (ADDR (.text) - kernel_physical_offset)
+    {
+        *(.entry)
+        *(.text .text.*)
     }
- 
-    .rodata : {
+
+    .rodata ALIGN(4K) : AT (ADDR (.rodata) - kernel_physical_offset)
+    {
+        constructors_start = .;
+        *(.ctors)
+        constructors_end = .;
+
+        destructors_start = .;
+        *(.dtors)
+        destructors_end = .;
+
         *(.rodata*)
     }
- 
-    .data : {
-        *(.data*)
+
+    .data ALIGN(4K) : AT (ADDR (.data) - kernel_physical_offset)
+    {
+        *(.data .data.*)
     }
- 
-    .bss : {
+
+    .bss ALIGN(4K) : AT (ADDR (.bss) - kernel_physical_offset)
+    {
         *(COMMON)
-        *(.bss*)
+        *(.bss .bss.*)
     }
 }

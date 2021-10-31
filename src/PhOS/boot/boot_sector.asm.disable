@@ -1,7 +1,7 @@
 bits 16
 org 0x7c00
 
-jmp bpb
+jmp skip_bpb
 nop
 
 times 32-($$-$) db 0

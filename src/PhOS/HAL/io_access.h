@@ -1,5 +1,5 @@
-#ifndef IO_ACCESS_INTRINSICS_H
-#define IO_ACCESS_INTRINSICS_H
+#ifndef IO_ACCESS_H
+#define IO_ACCESS_H
 
 #include "common.h"
 
@@ -43,4 +43,4 @@ inline static void ioWait(void)
     outb(0x80, 0);
 }
 
-#endif // IO_ACCESS_INTRINSICS_H
+#endif // IO_ACCESS_H
