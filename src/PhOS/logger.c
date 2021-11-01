@@ -5,16 +5,11 @@
 
 #include "kernel/terminal.h"
 
-extern terminal_t terminal;
-
-void loggerInitialize(void)
-{
-
-}
+void logchar(char c) { serialSendb(COM1, c); }
 
 void log(log_level_t log_level, const char* fmt, ...)
 {
-    char* c;
+    char*   c;
 
     va_list args;
     va_start(args, fmt);
@@ -24,39 +19,36 @@ void log(log_level_t log_level, const char* fmt, ...)
         while (*c != '%')
         {
             if (*c == 0) goto loop_end;
-            serialSendb(COM1, *c);
+            logchar(*c);
             c++;
         }
 
         c++;
         switch (*c)
         {
-            case 'b': 
-                
+            case 'b': break;
+            case 'c':
+            {
+                char _c = va_arg(args, char);
+                logchar(c);
                 break;
-            case 'c': 
-            
-                break;
-            case 'd': 
-                
-                break;
-            case 'o': 
-            
-                break;
-            case 's': 
+            }
+            case 'd': break;
+            case 'o': break;
+            case 's':
             {
                 char* string = va_arg(args, char*);
                 while (*string != '\0')
                 {
-                    serialSendb(COM1, *string);
+                    logchar(*string);
                     ++string;
                 }
                 break;
             }
-            case 'x': 
-                break;
+            case 'x': break;
         }
     }
-    loop_end:
+loop_end:
     va_end(args);
+    logchar('\n');
 }

@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 
+#define GDT_KERNEL_CODE_SELECTOR 0x08
+#define GDT_KERNEL_DATA_SELECTOR 0x10
+
 typedef struct
 {
     uint16_t limit_low;
@@ -25,7 +28,7 @@ typedef struct
     // TODO: Add some more segments e.g tss
 } __attribute__((packed)) gdt_t;
 
-void createGDT(gdt_t *gdt);
-void loadGDT(gdt_t *gdt);
+void gdtInitialize(void);
+void gdtLoad(gdt_t* gdt);
 
 #endif // GDT_H

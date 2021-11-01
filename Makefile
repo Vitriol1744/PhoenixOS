@@ -9,8 +9,8 @@ AS  = nasm
  
 CCFLAGS = -Wall -Wextra -pipe
 ASMFLAGS = -f elf64
-QEMU_FLAGS = -d int -d cpu_reset -m 256 -no-shutdown -no-reboot -monitor stdio
- 
+QEMU_FLAGS = -d int -d cpu_reset -M q35,smm=off -no-shutdown -no-reboot -monitor stdio -serial file:PhOS-logs.txt -D ./qemu-logs.txt
+
 INTERNALLDFLAGS :=     \
 	-fno-pic -no-pie\
 	-Wl,-static,--no-dynamic-linker,-ztext \
@@ -69,3 +69,7 @@ clean:
 
 run:
 	qemu-system-x86_64 $(QEMU_FLAGS) -cdrom image.iso
+
+rebuild:
+	make clean
+	make all

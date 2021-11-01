@@ -2,7 +2,7 @@ x86-64 Operating System written in C
 
 ## TODO:
 - [x] Set up GDT.
-- [ ] Load an IDT so that exceptions and interrupts can be handled.
+- [x] Load an IDT so that exceptions and interrupts can be handled.
 - [ ] Write a physical memory allocator, a good starting point is a bitmap allocator.
 - [ ] Write a virtual memory manager that can map, remap and unmap pages.
 - [ ] Begin parsing ACPI tables, the most important one is the MADT since it contains information about the APIC.

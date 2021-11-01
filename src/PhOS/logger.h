@@ -10,7 +10,6 @@ typedef enum
     LOG_LEVEL_FATAL
 } log_level_t;
 
-extern void loggerInitialize(void);
 extern void log(log_level_t log_level, const char* fmt, ...);
 
 #define PH_LOG_TRACE(...) log(LOG_LEVEL_TRACE, __VA_ARGS__)

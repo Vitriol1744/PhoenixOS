@@ -1,28 +1,28 @@
 #include "HAL/serial.h"
 #include "terminal.h"
 
+#include "interrupts/idt.h"
 #include "logger.h"
 #include "memory/gdt.h"
 #include "stdlib.h"
-
-terminal_t terminal;
-
-extern void load_gdt();
+#include "string.h"
 
 void kernelMain(stivale2_struct_t* bootloader_data)
 {
-    const char* str = "PhoenixOS!\n";
-    const char* str2 = "Hello, World!\n";
+    const char str[] = "PhoenixOS!\n";
 
-    terminalInitialize(&terminal, bootloader_data);
-    terminalWrite(&terminal, str, 11);
-    terminalWrite(&terminal, str2, 12);
+    terminalInitialize(bootloader_data);
+    terminalWrite(str, sizeof(str));
+    PH_LOG_INFO("PhoenixOS is Booting...");
     serialInitialize();
 
-    gdt_t gdt;
-    createGDT(&gdt);
-    loadGDT(&gdt);
-    PH_LOG_TRACE("Hello, %s!", "World");
+    gdtInitialize();
+    PH_LOG_INFO("GDT loaded successfully!");
+    idtInitialize();
+
+    // outb(0x21, 0xfd);
+    // outb(0xa1, 0xff);
+    // PH_ASM("sti");
 
     // char c_standard[20];
 
@@ -33,6 +33,5 @@ void kernelMain(stivale2_struct_t* bootloader_data)
     //     serialSendb(COM1, c_standard[i]);
     // }
 
-    for (;;)
-        PH_ASM("hlt");
+    for (;;) PH_ASM("hlt");
 }
