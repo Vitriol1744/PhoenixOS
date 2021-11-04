@@ -15,6 +15,9 @@ as_compiler = 'nasm'
 cc_compiler = 'clang'
 ld = 'clang'
 
+kernel_binary_file = 'kernel.elf'
+kernel_image_file = 'image.iso'
+
 FOREGROUND_BLACK = '\u001b[30m'
 FOREGROUND_RED = '\u001b[31m'
 FOREGROUND_GREEN = '\u001b[32m'
@@ -54,9 +57,17 @@ def error(msg: str):
     print(FOREGROUND_WHITE)
 
 
-def clean(build_dir):
+def clean(root_dir: str, build_dir: str):
     trace('cleaning...')
-    shutil.rmtree(build_dir)
+    os.chdir(root_dir)
+    if os.path.exists(build_dir):
+        shutil.rmtree(build_dir)
+    if os.path.exists(build_dir):
+        shutil.rmtree('iso_root')
+    if os.path.exists(build_dir):
+        os.remove(kernel_binary_file)
+    if os.path.exists(build_dir):
+        os.remove(kernel_image_file)
 
 
 def setup(os):
@@ -118,19 +129,24 @@ def link_object_files(root_dir: str, build_dir: str):
     obj_files = ''
     for obj in object_files:
         obj_files += f'{obj} '
-    cmd = f'{ld} {ld_flags} {obj_files} -o kernel.elf'
+    cmd = f'{ld} {ld_flags} {obj_files} -o {kernel_binary_file}'
     print(cmd)
     os.system(cmd)
 
 
 def create_iso(root_dir: str, binary_file: str):
     trace('creating iso...')
-    # todo: make it cross-platform!
-    cmd = f'cp -v {binary_file} limine.cfg third_party/limine/limine.sys third_party/limine/limine-cd.bin third_party/limine/limine-eltorito-efi.bin iso_root'
+
+    if not os.path.exists('iso_root'):
+        os.mkdir('iso_root')
+    files_to_copy = ['limine.cfg', 'third_party/limine/limine.sys',
+                     'third_party/limine/limine-cd.bin', 'third_party/limine/limine-eltorito-efi.bin']
+
     os.chdir(root_dir)
-    print(cmd)
-    os.system(cmd)
-    cmd = 'xorriso -as mkisofs -b limine-cd.bin -no-emul-boot -boot-load-size 4 -boot-info-table --efi-boot limine-eltorito-efi.bin -efi-boot-part --efi-boot-image --protective-msdos-label iso_root -o image.iso'
+    for file in files_to_copy:
+        shutil.copy(file, 'iso_root')
+
+    cmd = f'xorriso -as mkisofs -b limine-cd.bin -no-emul-boot -boot-load-size 4 -boot-info-table --efi-boot limine-eltorito-efi.bin -efi-boot-part --efi-boot-image --protective-msdos-label iso_root -o {kernel_image_file}'
     print()
     print(cmd)
     os.system(cmd)
@@ -145,7 +161,7 @@ def build(root_dir: str, build_dir: str, src_dir: str):
     compile_files(build_dir, src_dir,
                   f'{c_flags} {internal_c_flags}', '.c', compile_c_file)
     link_object_files(root_dir, build_dir)
-    create_iso(root_dir, 'kernel.elf')
+    create_iso(root_dir, kernel_binary_file)
 
 
 def run(image_name: str):
@@ -163,16 +179,16 @@ if __name__ == "__main__":
     for arg_ in enumerate(sys.argv):
         arg = arg_[1]
         if arg == 'clean':
-            clean(build_dir)
+            clean(root_dir, build_dir)
         elif arg == 'build':
             build(root_dir, build_dir, src_dir)
         elif arg == 'rebuild':
-            clean(build_dir)
+            clean(root_dir, build_dir)
             build(root_dir, build_dir, src_dir)
         elif arg == 'make_iso':
-            create_iso(root_dir, 'kernel.elf')
+            create_iso(root_dir, kernel_binary_file)
         elif arg == 'run':
-            run('image.iso')
+            run(kernel_image_file)
         elif arg == 'setup_arch_based':
             setup('arch')
         elif arg == 'setup_debian_based':
