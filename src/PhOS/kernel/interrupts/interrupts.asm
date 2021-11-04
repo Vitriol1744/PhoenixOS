@@ -2,14 +2,12 @@ bits 64
 
 %macro isr_err_stub 1
 isr_stub_%+%1:
-    mov eax, 15
     call defaultExceptionHandler
     iretq 
 %endmacro
 
 %macro isr_no_err_stub 1
 isr_stub_%+%1:
-    mov eax, 15
     call defaultExceptionHandler
     iretq
 %endmacro
@@ -55,8 +53,3 @@ isr_stub_table:
     dq isr_stub_%+i
 %assign i i+1 
 %endrep
-
-[extern interrupt]
-interrupt:
-    int 3
-    ret
