@@ -1,5 +1,30 @@
 x86-64 Operating System written in C
 
+## Requirements:
+- python3
+- nasm
+- clang
+- xorriso
+- qemu
+if you have python3 installed and your os is debian or arch you can just run
+```
+python3 build.py setup_debian_based
+```
+or
+```
+python3 build.py setup_arch_based
+```
+
+## How to build?
+just do this:
+```
+python3 build.py build
+```
+### How to run?
+```
+python3 build.py run
+```
+
 ## TODO:
 - [x] Set up GDT.
 - [x] Load an IDT so that exceptions and interrupts can be handled.

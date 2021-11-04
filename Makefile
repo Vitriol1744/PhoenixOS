@@ -7,9 +7,9 @@ CC  = clang
 CXX = clang++
 AS  = nasm
  
-CCFLAGS = -Wall -Wextra -pipe
+CCFLAGS = -Wall -Werror -Wextra -pipe
 ASMFLAGS = -f elf64
-QEMU_FLAGS = -d int -d cpu_reset -M q35,smm=off -no-shutdown -no-reboot -monitor stdio -serial file:PhOS-logs.txt -D ./qemu-logs.txt
+QEMU_FLAGS = -d int -d cpu_reset -M q35,smm=off -no-shutdown -no-reboot -monitor stdio -serial file:serial.log -D ./qemu.log
 
 INTERNALLDFLAGS :=     \
 	-fno-pic -no-pie\

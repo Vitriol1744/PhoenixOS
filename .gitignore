@@ -1,2 +1,4 @@
 /.vscode/
 /build/
+/serial.log
+/qemu.log
