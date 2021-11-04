@@ -84,6 +84,14 @@ def setup(os):
     os.system(cmd)
 
 
+def build_third_party(limine_dir: str):
+    trace('building limine...')
+    cmd = f'make -C {limine_dir}'
+    print(cmd)
+    os.system(cmd)
+    info('limine built!')
+
+
 def find_files(dir: str, extension: str) -> list[str]:
     ret_files = []
     for subdir, dirs, files in os.walk(dir):
@@ -106,6 +114,7 @@ def compile_files(build_dir: str, src_dir: str, flags: str, extension: str, func
             os.makedirs(dir)
         os.chdir(dir)
         func(file_to_compile, flags, filename)
+    info(f'finished compiling {extension} files!')
 
 
 def compile_c_file(file_to_compile: str, flags: str, filename: str):
@@ -114,6 +123,7 @@ def compile_c_file(file_to_compile: str, flags: str, filename: str):
     cmd = f'{cc_compiler} {flags} -c {file_to_compile} -o {filename}.o'
     print(cmd)
     os.system(cmd)
+    print()
 
 
 def compile_asm_file(file_to_compile: str, flags: str, filename: str):
@@ -129,9 +139,10 @@ def link_object_files(root_dir: str, build_dir: str):
     obj_files = ''
     for obj in object_files:
         obj_files += f'{obj} '
-    cmd = f'{ld} {ld_flags} {obj_files} -o {kernel_binary_file}'
+    cmd = f'{ld} {ld_flags} {obj_files} -o iso_root/{kernel_binary_file}'
     print(cmd)
     os.system(cmd)
+    info('finished linking obj files!')
 
 
 def create_iso(root_dir: str, binary_file: str):
@@ -146,29 +157,33 @@ def create_iso(root_dir: str, binary_file: str):
     for file in files_to_copy:
         shutil.copy(file, 'iso_root')
 
-    cmd = f'xorriso -as mkisofs -b limine-cd.bin -no-emul-boot -boot-load-size 4 -boot-info-table --efi-boot limine-eltorito-efi.bin -efi-boot-part --efi-boot-image --protective-msdos-label iso_root -o {kernel_image_file}'
+    cmd = f'xorriso -as mkisofs -b limine-cd.bin -no-emul-boot -boot-load-size 4 -boot-info-table --efi-boot limine-eltorito-efi.bin -efi-boot-part --efi-boot-image --protective-msdos-label iso_root -o iso_root/{kernel_image_file}'
     print()
     print(cmd)
     os.system(cmd)
+    info('finished creating iso!')
 
 
 def build(root_dir: str, build_dir: str, src_dir: str):
-    trace('building...')
+    trace('building PhoenixOS...')
     if not os.path.exists(build_dir):
         os.makedirs(build_dir)
 
+    build_third_party(f'{root_dir}/third_party')
     compile_files(build_dir, src_dir, asm_flags, '.asm', compile_asm_file)
     compile_files(build_dir, src_dir,
                   f'{c_flags} {internal_c_flags}', '.c', compile_c_file)
     link_object_files(root_dir, build_dir)
     create_iso(root_dir, kernel_binary_file)
+    info('finished building PhoenixOS!')
 
 
 def run(image_name: str):
-    info('running...')
-    cmd = f'qemu-system-x86_64 {qemu_flags} -cdrom {image_name}'
+    info('running PhoenixOS...')
+    cmd = f'qemu-system-x86_64 {qemu_flags} -cdrom iso_root/{image_name}'
     print(cmd)
     os.system(cmd)
+    info('PhoenixOS terminated!')
 
 
 if __name__ == "__main__":
@@ -193,3 +208,5 @@ if __name__ == "__main__":
             setup('arch')
         elif arg == 'setup_debian_based':
             setup('debian')
+        elif arg == 'build_third_party':
+            build_third_party(f'{root_dir}/third_party')

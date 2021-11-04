@@ -12,6 +12,23 @@ typedef enum serial_port
     SERIAL_PORT_COM4 = 0x2E8,
 } serial_port_t;
 
+typedef enum
+{
+    SERIAL_DATA_REGISTER             = 0,
+    SERIAL_INTERRUPT_ENABLE_REGISTER = 1,
+    SERIAL_DIVISOR_LOW               = 0, // Baud Rate Divisor
+    SERIAL_DIVISOR_HIGH              = 1,
+    SERIAL_FIFO_CONTROL_REGISTER     = 2,
+    SERIAL_INTERRUPT_ID_REGISTER     = 2,
+    SERIAL_LINE_CONTROL_REGISTER     = 3,
+    SERIAL_MODEM_CONTROL_REGISTER    = 4,
+    SERIAL_LINE_STATUS_REGISTER      = 5,
+    SERIAL_MODEM_STATUS_REGISTER     = 6,
+    SERIAL_SCRATCH_REGISTER          = 7
+} serial_register_t;
+
+#define SERIAL_MAKE_REGISTER(port, reg) port + reg
+
 extern bool        serialInitialize(void);
 
 inline static bool serialReceived(serial_port_t port)
