@@ -1,7 +1,9 @@
 #include "gdt.h"
 
 #include "common.h"
-#include "logger.h"
+#include "kernel/logger.h"
+
+#include "string.h"
 
 #define CREATE_GDT_ENTRY(entry, base, limit, _access, _flags)                  \
     entry.limit_low   = limit & 0xFFFF;                                        \
@@ -18,16 +20,40 @@ void  gdtInitialize()
 {
     gdt_entry_t* gdt = (gdt_entry_t*)&g_GDT;
 
+    gdt_access_t kernel_code_access
+        = GDT_ACCESS_PRESENT | GDT_ACCESS_RING_0 | GDT_ACCESS_CODE_OR_DATA
+        | GDT_ACCESS_CODE_SEGMENT | GDT_ACCESS_READABLE;
+    gdt_access_t kernel_data_access
+        = GDT_ACCESS_PRESENT | GDT_ACCESS_RING_0 | GDT_ACCESS_CODE_OR_DATA
+        | GDT_ACCESS_DATA_SEGMENT | GDT_ACCESS_GROWS_UP | GDT_ACCESS_WRITEABLE;
+    gdt_access_t userland_code_access
+        = GDT_ACCESS_PRESENT | GDT_ACCESS_RING_3 | GDT_ACCESS_CODE_OR_DATA
+        | GDT_ACCESS_CODE_SEGMENT | GDT_ACCESS_READABLE;
+    gdt_access_t userland_data_access = GDT_ACCESS_PRESENT | GDT_ACCESS_RING_3
+                                      | GDT_ACCESS_CODE_OR_DATA
+                                      | GDT_ACCESS_WRITEABLE;
+
+    gdt_flag_t kernel_code_flag
+        = GDT_FLAG_GRANULARITY_4K | GDT_FLAG_64BIT_SEGMENT;
+    gdt_flag_t kernel_data_flag
+        = GDT_FLAG_GRANULARITY_4K | GDT_FLAG_32BIT_SEGMENT;
+    gdt_flag_t userland_code_flag = kernel_code_flag;
+    gdt_flag_t userland_data_flag = kernel_data_flag;
+
     // null segment
     memset(gdt, 0, sizeof(gdt_entry_t));
     // kernel code segment
-    CREATE_GDT_ENTRY(gdt[1], 0x00000000, 0xFFFFF, 0x9A, 0xA);
+    CREATE_GDT_ENTRY(gdt[1], 0x00000000, 0xFFFFF, kernel_code_access,
+                     kernel_code_flag);
     // kernel data segment
-    CREATE_GDT_ENTRY(gdt[2], 0x00000000, 0xFFFFF, 0x92, 0xC);
+    CREATE_GDT_ENTRY(gdt[2], 0x00000000, 0xFFFFF, kernel_data_access,
+                     kernel_data_flag);
     // userland code segment
-    CREATE_GDT_ENTRY(gdt[3], 0x00000000, 0xFFFFF, 0xFA, 0xC);
+    CREATE_GDT_ENTRY(gdt[3], 0x00000000, 0xFFFFF, userland_code_access,
+                     userland_code_flag);
     // userland data segment
-    CREATE_GDT_ENTRY(gdt[4], 0x00000000, 0xFFFFF, 0xF2, 0xC);
+    CREATE_GDT_ENTRY(gdt[4], 0x00000000, 0xFFFFF, userland_data_access,
+                     userland_data_flag);
 
     gdtLoad(&g_GDT);
 }

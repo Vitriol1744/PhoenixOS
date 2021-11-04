@@ -1,18 +1,25 @@
 #ifndef COMMON_H
-#define COMMON_H 
+#define COMMON_H
 
-#include <stdint.h>
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
-#define PH_NULL_HANDLE 0
-#define PH_ASM(...) __asm__(__VA_ARGS__);
+#define PH_NULL_HANDLE  0
+#define PH_ASM(...)     __asm__(__VA_ARGS__);
 #define PH_ASM_VOL(...) __asm__ volatile(__VA_ARGS__);
+#define PH_CONSTEXPR(name, value)                                              \
+    enum                                                                       \
+    {                                                                          \
+        name = value                                                           \
+    }
+#define PH_BREAKPOINT PH_ASM_VOL("1: jmp 1b")
+#define PH_UNUSED(x)  (void)(x)
 
-typedef int8_t  int8;
-typedef int16_t int16;
-typedef int32_t int32;
-typedef int64_t int64;
+typedef int8_t   int8;
+typedef int16_t  int16;
+typedef int32_t  int32;
+typedef int64_t  int64;
 
 typedef uint8_t  uint8;
 typedef uint16_t uint16;

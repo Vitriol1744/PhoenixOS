@@ -1,6 +1,6 @@
 #include "serial.h"
 
-bool serialInitializePort(uint32_t port)
+bool serialInitializePort(serial_port_t port)
 {
     outb(port + 1, 0x00); // Disable all Interrupts
     outb(port + 3, 0x80); // Enable DLAB
@@ -15,7 +15,7 @@ bool serialInitializePort(uint32_t port)
     outb(port + 0, 0xAE);
     if (inb(port) != 0xAE)
     {
-        //TODO: Some Kind of Logging!
+        // TODO: Some Kind of Logging!
         return false;
     }
 
@@ -27,10 +27,10 @@ bool serialInitializePort(uint32_t port)
 bool serialInitialize(void)
 {
     bool ret = false;
-    ret |= serialInitializePort(COM1);
-    ret |= serialInitializePort(COM2);
-    ret |= serialInitializePort(COM3);
-    ret |= serialInitializePort(COM4);
+    ret |= serialInitializePort(SERIAL_PORT_COM1);
+    ret |= serialInitializePort(SERIAL_PORT_COM2);
+    ret |= serialInitializePort(SERIAL_PORT_COM3);
+    ret |= serialInitializePort(SERIAL_PORT_COM4);
 
     return ret;
 }

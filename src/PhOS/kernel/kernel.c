@@ -1,9 +1,10 @@
-#include "HAL/serial.h"
+#include "kernel/io/serial.h"
 #include "terminal.h"
 
-#include "interrupts/idt.h"
-#include "logger.h"
-#include "memory/gdt.h"
+#include "kernel/interrupts/idt.h"
+#include "kernel/interrupts/pic.h"
+#include "kernel/logger.h"
+#include "kernel/memory/gdt.h"
 #include "stdlib.h"
 #include "string.h"
 
@@ -18,7 +19,13 @@ void kernelMain(stivale2_struct_t* bootloader_data)
 
     gdtInitialize();
     PH_LOG_INFO("GDT loaded successfully!");
+    picRemap(0x20, 0x28);
     idtInitialize();
+
+    stivale2_struct_tag_memmap_t* memory_map_tag
+        = stivale2GetTag(bootloader_data, STIVALE2_STRUCT_TAG_MEMMAP_ID);
+
+    PH_UNUSED(memory_map_tag);
 
     // outb(0x21, 0xfd);
     // outb(0xa1, 0xff);

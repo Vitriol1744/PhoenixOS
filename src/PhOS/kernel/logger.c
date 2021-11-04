@@ -1,20 +1,21 @@
 #include "logger.h"
-#include "HAL/serial.h"
+#include "kernel/io/serial.h"
 
 #include <stdarg.h>
 
 #include "kernel/terminal.h"
 
-void logchar(char c) { serialSendb(COM1, c); }
+void logchar(char c) { serialSendb(SERIAL_PORT_COM1, c); }
 
 void log(log_level_t log_level, const char* fmt, ...)
 {
-    char*   c;
+    char* c;
+    PH_UNUSED(log_level);
 
     va_list args;
     va_start(args, fmt);
 
-    for (c = fmt; *c != '\0'; c++)
+    for (c = (char*)fmt; *c != '\0'; c++)
     {
         while (*c != '%')
         {
@@ -29,8 +30,8 @@ void log(log_level_t log_level, const char* fmt, ...)
             case 'b': break;
             case 'c':
             {
-                char _c = va_arg(args, char);
-                logchar(c);
+                char _c = va_arg(args, int);
+                logchar(_c);
                 break;
             }
             case 'd': break;
