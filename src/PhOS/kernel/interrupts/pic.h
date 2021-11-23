@@ -11,9 +11,14 @@
 #define PIC2_DATA    (PIC2 + 1)
 #define PIC_EOI      0x20
 
-extern void picRemap(int32_t offset1, int32_t offset2);
-extern void picDisable(void);
+extern void   picRemap(int32_t pic_master_offset, int32_t pic_slave_offset);
+extern void   picDisable(void);
 // End of Interrupt
-extern void picSendEOI(byte_t irq);
+extern void   picSendEOI(byte_t irq);
+extern void   picSetIMR(byte_t irq_line);
+extern void   picClearIMR(byte_t irq_line);
+
+extern word_t picGetIRR(void);
+extern word_t picGetISR(void);
 
 #endif // PIC_H

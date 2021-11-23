@@ -10,7 +10,7 @@
     entry.base_low    = base & 0xFFFF;                                         \
     entry.base_middle = (base & 0x00FF0000) >> 16;                             \
     entry.access      = _access;                                               \
-    entry.limit_high  = (limit & 0xF0000) >> 16;                               \
+    entry.limit_high  = (limit & 0x000F0000) >> 16;                            \
     entry.flags       = _flags;                                                \
     entry.base_high   = (base & 0xFF000000) >> 24;
 
@@ -54,8 +54,7 @@ void  gdtInitialize()
     // userland data segment
     CREATE_GDT_ENTRY(gdt[4], 0x00000000, 0xFFFFF, userland_data_access,
                      userland_data_flag);
-
-    gdtLoad(&g_GDT);
+    gdtLoad();
 }
 
 typedef struct
@@ -64,11 +63,11 @@ typedef struct
     uint64_t pointer;
 } __attribute__((packed)) gdt_descriptor_t;
 
-void gdtLoad(gdt_t* gdt)
+void gdtLoad()
 {
     gdt_descriptor_t gdt_descriptor;
     gdt_descriptor.size    = sizeof(gdt_t) - 1;
-    gdt_descriptor.pointer = (uintptr_t)(gdt);
+    gdt_descriptor.pointer = (uintptr_t)(&g_GDT);
 
     PH_LOG_INFO("Loading GDT...");
     PH_ASM_VOL(
@@ -93,5 +92,4 @@ void gdtLoad(gdt_t* gdt)
         : "m"(gdt_descriptor), "r"((uint64_t)(GDT_KERNEL_CODE_SELECTOR)),
           "r"((uint64_t)(GDT_KERNEL_DATA_SELECTOR))
         : "memory");
-    PH_LOG_INFO("GDT Loaded!");
 }

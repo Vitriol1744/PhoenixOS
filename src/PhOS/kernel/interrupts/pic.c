@@ -14,6 +14,9 @@
 #define ICW4_BUF_MASTER 0x0C /* Buffered mode/master */
 #define ICW4_SFNM       0x10 /* Special fully nested (not) */
 
+#define PIC_READ_IRR    0x0a
+#define PIC_READ_ISR    0x0b
+
 void picRemap(int32_t pic_master_offset, int32_t pic_slave_offset)
 {
     unsigned char a1 = inb(PIC1_DATA);
@@ -52,3 +55,43 @@ void picSendEOI(byte_t irq)
     if (irq >= 8) outb(PIC2_COMMAND, PIC_EOI);
     outb(PIC1_COMMAND, PIC_EOI);
 }
+void picSetIMR(byte_t irq_line)
+{
+    word_t port;
+    byte_t value;
+
+    if (irq_line < 8) port = PIC1_DATA;
+    else
+    {
+        port = PIC2_DATA;
+        irq_line -= 8;
+    }
+    value = inb(port) | (1 << irq_line);
+    outb(port, value);
+}
+void picClearIMR(byte_t irq_line)
+{
+    word_t port;
+    byte_t value;
+
+    if (irq_line < 8) port = PIC1_DATA;
+    else
+    {
+        port = PIC2_DATA;
+        irq_line -= 8;
+    }
+    value = inb(port) & ~(1 << irq_line);
+    outb(port, value);
+}
+
+static word_t __getIRQ_Register(int32_t ocw3)
+{
+    outb(PIC1_COMMAND, ocw3);
+    outb(PIC2_COMMAND, ocw3);
+    return (inb(PIC2_COMMAND) << 8) | inb(PIC1_COMMAND);
+}
+
+// Interrupt Request Register
+word_t picGetIRR(void) { return __getIRQ_Register(PIC_READ_IRR); }
+// Interrupt In Service Register
+word_t picGetISR(void) { return __getIRQ_Register(PIC_READ_ISR); }

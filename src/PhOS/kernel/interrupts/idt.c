@@ -1,5 +1,6 @@
 #include "idt.h"
 
+#include "kernel/interrupts/pic.h"
 #include "kernel/io/io_access.h"
 #include "kernel/logger.h"
 #include "kernel/memory/gdt.h"

@@ -1,7 +1,7 @@
 import os
 import sys
 import shutil
-from typing import Callable
+import build_tools as bt
 
 asm_flags = '-f elf64'
 c_flags = '-Wall -Werror -Wextra -pipe'
@@ -9,112 +9,39 @@ internal_c_flags = '-I. -std=c17 -ffreestanding -fno-stack-protector -fno-pic -f
 c_include_paths = ['third_party/stivale', 'src/userland/libc', 'src/PhOS/']
 ld_flags = '-fno-pic -no-pie -Wl,-static,--no-dynamic-linker,-ztext -nostdlib -nodefaultlibs -Tlinker.ld -z max-page-size=0x1000'
 
-qemu_flags = '-d int -d cpu_reset -M q35,smm=off -no-shutdown -no-reboot -monitor stdio -serial file:serial.log -D ./qemu.log'
+qemu_flags = '-d int -d cpu_reset -m 2G -M q35,smm=off -no-shutdown -no-reboot -monitor stdio -serial file:serial.log -D ./qemu.log'
 
 as_compiler = 'nasm'
 cc_compiler = 'clang'
 ld = 'clang'
 
 kernel_binary_file = 'kernel.elf'
-kernel_image_file = 'image.iso'
-
-FOREGROUND_BLACK = '\u001b[30m'
-FOREGROUND_RED = '\u001b[31m'
-FOREGROUND_GREEN = '\u001b[32m'
-FOREGROUND_YELLOW = '\u001b[33m'
-FOREGROUND_BLUE = '\u001b[34m'
-FOREGROUND_MAGENTA = '\u001b[35m'
-FOREGROUND_CYAN = '\u001b[36m'
-FOREGROUND_WHITE = '\u001b[37m'
-
-BACKGROUND_BLACK = '\u001b[40m'
-BACKGROUND_RED = '\u001b[41m'
-BACKGROUND_GREEN = '\u001b[42m'
-BACKGROUND_YELLOW = '\u001b[43m'
-BACKGROUND_BLUE = '\u001b[44m'
-BACKGROUND_MAGENTA = '\u001b[45m'
-BACKGROUND_CYAN = '\u001b[46m'
-BACKGROUND_WHITE = '\u001b[47m'
-
-COLOR_RESET = '\u001b[0m'
-
-
-def trace(msg: str):
-    print(FOREGROUND_GREEN)
-    print(msg)
-    print(FOREGROUND_WHITE)
-
-
-def info(msg: str):
-    print(FOREGROUND_CYAN)
-    print(msg)
-    print(FOREGROUND_WHITE)
-
-
-def error(msg: str):
-    print(FOREGROUND_RED)
-    print(msg)
-    print(FOREGROUND_WHITE)
-
-
-def clean(root_dir: str, build_dir: str):
-    trace('cleaning...')
-    os.chdir(root_dir)
-    if os.path.exists(build_dir):
-        shutil.rmtree(build_dir)
-    if os.path.exists(build_dir):
-        shutil.rmtree('iso_root')
-    if os.path.exists(build_dir):
-        os.remove(kernel_binary_file)
-    if os.path.exists(build_dir):
-        os.remove(kernel_image_file)
+kernel_image_file = 'phoenixos.iso'
 
 
 def setup(os):
     package_manager = ''
     packages = 'clang qemu xorriso nasm'
 
+    additional_packages = list[str]
+
     if os == 'arch':
         package_manager = 'pacman -Syy'
     elif os == 'debian':
         package_manager = 'apt install'
+        additional_packages.append('build-essential')
 
-    cmd = f'sudo {package_manager} {packages}'
-    trace(cmd)
+    cmd = f'sudo {package_manager} {packages} {additional_packages}'
+    bt.trace(cmd)
     os.system(cmd)
 
 
 def build_third_party(limine_dir: str):
-    trace('building limine...')
+    bt.trace('building limine...')
     cmd = f'make -C {limine_dir}'
     print(cmd)
     os.system(cmd)
-    info('limine built!')
-
-
-def find_files(dir: str, extension: str) -> list[str]:
-    ret_files = []
-    for subdir, dirs, files in os.walk(dir):
-        for file in files:
-            if file.endswith(extension):
-                ret_files.append(os.path.join(subdir, file))
-    return ret_files
-
-
-def compile_files(build_dir: str, src_dir: str, flags: str, extension: str, func: Callable[[str, str, str], int]):
-    trace(f'compiling {extension} files')
-    files_to_compile = find_files(src_dir, extension)
-
-    for file_to_compile in files_to_compile:
-        os.chdir(build_dir)
-        split = os.path.split(os.path.abspath(file_to_compile))
-        dir = f'./{split[0].removeprefix(src_dir)}'
-        filename = split[1]
-        if not os.path.exists(dir):
-            os.makedirs(dir)
-        os.chdir(dir)
-        func(file_to_compile, flags, filename)
-    info(f'finished compiling {extension} files!')
+    bt.info('limine built!')
 
 
 def compile_c_file(file_to_compile: str, flags: str, filename: str):
@@ -133,20 +60,22 @@ def compile_asm_file(file_to_compile: str, flags: str, filename: str):
 
 
 def link_object_files(root_dir: str, build_dir: str):
-    trace('linking object files...')
+    bt.trace('linking object files...')
     os.chdir(root_dir)
-    object_files = find_files(build_dir, '.o')
+    if not os.path.exists('iso_root'):
+        os.makedirs('iso_root')
+    object_files = bt.find_files(build_dir, '.o')
     obj_files = ''
     for obj in object_files:
         obj_files += f'{obj} '
     cmd = f'{ld} {ld_flags} {obj_files} -o iso_root/{kernel_binary_file}'
     print(cmd)
     os.system(cmd)
-    info('finished linking obj files!')
+    bt.info('finished linking obj files!')
 
 
-def create_iso(root_dir: str, binary_file: str):
-    trace('creating iso...')
+def create_iso(root_dir: str):
+    bt.trace('creating iso...')
 
     if not os.path.exists('iso_root'):
         os.mkdir('iso_root')
@@ -161,29 +90,29 @@ def create_iso(root_dir: str, binary_file: str):
     print()
     print(cmd)
     os.system(cmd)
-    info('finished creating iso!')
+    bt.info('finished creating iso!')
 
 
 def build(root_dir: str, build_dir: str, src_dir: str):
-    trace('building PhoenixOS...')
+    bt.trace('building PhoenixOS...')
     if not os.path.exists(build_dir):
         os.makedirs(build_dir)
 
     build_third_party(f'{root_dir}/third_party')
-    compile_files(build_dir, src_dir, asm_flags, '.asm', compile_asm_file)
-    compile_files(build_dir, src_dir,
-                  f'{c_flags} {internal_c_flags}', '.c', compile_c_file)
+    bt.compile_files(build_dir, src_dir, asm_flags, '.asm', compile_asm_file)
+    bt.compile_files(build_dir, src_dir,
+                     f'{c_flags} {internal_c_flags}', '.c', compile_c_file)
     link_object_files(root_dir, build_dir)
-    create_iso(root_dir, kernel_binary_file)
-    info('finished building PhoenixOS!')
+    create_iso(root_dir)
+    bt.info('finished building PhoenixOS!')
 
 
 def run(image_name: str):
-    info('running PhoenixOS...')
+    bt.info('running PhoenixOS...')
     cmd = f'qemu-system-x86_64 {qemu_flags} -cdrom iso_root/{image_name}'
     print(cmd)
     os.system(cmd)
-    info('PhoenixOS terminated!')
+    bt.info('PhoenixOS terminated!')
 
 
 if __name__ == "__main__":
@@ -191,14 +120,17 @@ if __name__ == "__main__":
     build_dir = f'{root_dir}/build'
     src_dir = f'{root_dir}/src'
 
+    things_to_remove = ['iso_root', 'build', 'qemu.log', 'serial.log']
+
     for arg_ in enumerate(sys.argv):
         arg = arg_[1]
+
         if arg == 'clean':
-            clean(root_dir, build_dir)
+            bt.clean(root_dir, things_to_remove)
         elif arg == 'build':
             build(root_dir, build_dir, src_dir)
         elif arg == 'rebuild':
-            clean(root_dir, build_dir)
+            bt.clean(root_dir, things_to_remove)
             build(root_dir, build_dir, src_dir)
         elif arg == 'make_iso':
             create_iso(root_dir, kernel_binary_file)
@@ -210,3 +142,6 @@ if __name__ == "__main__":
             setup('debian')
         elif arg == 'build_third_party':
             build_third_party(f'{root_dir}/third_party')
+        else:
+            continue
+        break

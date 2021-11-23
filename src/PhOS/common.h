@@ -16,6 +16,8 @@
 #define PH_BREAKPOINT PH_ASM_VOL("1: jmp 1b")
 #define PH_UNUSED(x)  (void)(x)
 
+#include "kernel/logger.h"
+
 typedef int8_t   int8;
 typedef int16_t  int16;
 typedef int32_t  int32;

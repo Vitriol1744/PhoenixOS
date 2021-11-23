@@ -1,10 +1,10 @@
 #ifndef GDT_H
 #define GDT_H
 
-#include <stdint.h>
+#include "common.h"
 
-#define GDT_KERNEL_CODE_SELECTOR 0x08
-#define GDT_KERNEL_DATA_SELECTOR 0x10
+PH_CONSTEXPR(GDT_KERNEL_CODE_SELECTOR, 0x08);
+PH_CONSTEXPR(GDT_KERNEL_DATA_SELECTOR, 0x10);
 
 typedef enum
 {
@@ -54,6 +54,6 @@ typedef struct
 } __attribute__((packed)) gdt_t;
 
 void gdtInitialize(void);
-void gdtLoad(gdt_t* gdt);
+void gdtLoad();
 
 #endif // GDT_H
