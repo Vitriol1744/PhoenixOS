@@ -16,6 +16,6 @@ typedef struct
     uint32_t reserved;
 } __attribute__((packed)) idt_entry_t;
 
-extern void idtInitialize(void);
+extern void idt_Initialize(void);
 
 #endif // IDT_H

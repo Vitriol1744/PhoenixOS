@@ -16,7 +16,7 @@
 
 gdt_t g_GDT;
 
-void  gdtInitialize()
+void  gdt_Initialize()
 {
     gdt_entry_t* gdt = (gdt_entry_t*)&g_GDT;
 
@@ -54,7 +54,7 @@ void  gdtInitialize()
     // userland data segment
     CREATE_GDT_ENTRY(gdt[4], 0x00000000, 0xFFFFF, userland_data_access,
                      userland_data_flag);
-    gdtLoad();
+    gdt_Load();
 }
 
 typedef struct
@@ -63,7 +63,7 @@ typedef struct
     uint64_t pointer;
 } __attribute__((packed)) gdt_descriptor_t;
 
-void gdtLoad()
+void gdt_Load()
 {
     gdt_descriptor_t gdt_descriptor;
     gdt_descriptor.size    = sizeof(gdt_t) - 1;

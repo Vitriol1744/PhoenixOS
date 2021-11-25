@@ -3,7 +3,7 @@
 
 #include "common.h"
 
-extern bool apicCheckSupport(void);
-extern void apicEnable(void);
+extern bool apic_CheckSupport(void);
+extern void apic_Enable(void);
 
 #endif // APIC_H

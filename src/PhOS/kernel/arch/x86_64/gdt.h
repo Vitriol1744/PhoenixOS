@@ -53,7 +53,7 @@ typedef struct
     // TODO: Add some more segments e.g tss
 } __attribute__((packed)) gdt_t;
 
-void gdtInitialize(void);
-void gdtLoad();
+void gdt_Initialize(void);
+void gdt_Load();
 
 #endif // GDT_H

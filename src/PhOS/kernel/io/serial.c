@@ -1,6 +1,6 @@
 #include "serial.h"
 
-bool serialInitializePort(serial_port_t port)
+bool serial_InitializePort(serial_port_t port)
 {
 
     outb(port + SERIAL_INTERRUPT_ENABLE_REGISTER,
@@ -30,13 +30,13 @@ bool serialInitializePort(serial_port_t port)
     return true;
 }
 
-bool serialInitialize(void)
+bool serial_Initialize(void)
 {
     bool ret = false;
-    ret |= serialInitializePort(SERIAL_PORT_COM1);
-    ret |= serialInitializePort(SERIAL_PORT_COM2);
-    ret |= serialInitializePort(SERIAL_PORT_COM3);
-    ret |= serialInitializePort(SERIAL_PORT_COM4);
+    ret |= serial_InitializePort(SERIAL_PORT_COM1);
+    ret |= serial_InitializePort(SERIAL_PORT_COM2);
+    ret |= serial_InitializePort(SERIAL_PORT_COM3);
+    ret |= serial_InitializePort(SERIAL_PORT_COM4);
 
     return ret;
 }

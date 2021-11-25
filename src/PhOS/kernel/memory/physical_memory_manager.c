@@ -8,7 +8,7 @@ uint32_t bitmaps_count = 0;
 PH_CONSTEXPR(PAGE_SIZE, 0x1000); // 4K
 uint64_t highest_page = 0;
 
-void physicalMemoryAllocator_Initialize(stivale2_mmap_entry_t* memory_map, size_t entries)
+void pmm_Initialize(stivale2_mmap_entry_t* memory_map, size_t entries)
 {
     size_t total_memory = 0;
     for (size_t i = 0; i < entries; i++) 
@@ -64,7 +64,7 @@ void physicalMemoryAllocator_Initialize(stivale2_mmap_entry_t* memory_map, size_
 	}
 }
 
-void* physicalMemoryAllocator_AllocatePages(size_t num)
+void* pmm_AllocatePages(size_t num)
 {
     static size_t last_used_index = 0;
     if (last_used_index > bitmap.size) last_used_index = 0;
@@ -90,7 +90,7 @@ void* physicalMemoryAllocator_AllocatePages(size_t num)
     PH_LOG_INFO("Out of Memory!");
     return PH_NULL_HANDLE;
 }
-void physicalMemoryAllocator_FreePages(void* address, size_t num)
+void pmm_FreePages(void* address, size_t num)
 {
     size_t page_index = (uint64_t)address / PAGE_SIZE;
     num += page_index;

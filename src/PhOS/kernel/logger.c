@@ -6,7 +6,7 @@
 
 #include "kernel/terminal.h"
 
-void logchar(char c) { serialSendb(SERIAL_PORT_COM1, c); }
+void logchar(char c) { serial_Sendb(SERIAL_PORT_COM1, c); }
 
 void log(log_level_t log_level, const char* fmt, ...)
 {

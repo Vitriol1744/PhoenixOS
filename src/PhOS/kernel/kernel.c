@@ -15,23 +15,23 @@ void kernelMain(stivale2_struct_t* bootloader_data)
 
     // TODO: Check for CPUID Support!
 
-    terminalInitialize(bootloader_data);
-    terminalWrite(str, sizeof(str));
+    terminal_Initialize(bootloader_data);
+    terminal_Write(str, sizeof(str));
     PH_LOG_INFO("PhoenixOS is Booting...");
-    serialInitialize();
+    serial_Initialize();
 
-    gdtInitialize();
+    gdt_Initialize();
     PH_LOG_INFO("GDT loaded successfully!");
-    picRemap(0x20, 0x28);
-    idtInitialize();
+    pic_Remap(0x20, 0x28);
+    idt_Initialize();
 
     stivale2_struct_tag_memmap_t* memory_map_tag
         = stivale2GetTag(bootloader_data, STIVALE2_STRUCT_TAG_MEMMAP_ID);
 
-    physicalMemoryAllocator_Initialize(memory_map_tag->memmap, memory_map_tag->entries);
+    pmm_Initialize(memory_map_tag->memmap, memory_map_tag->entries);
     
     void* ptr = NULL;
-    while (true) ptr = physicalMemoryAllocator_AllocatePages(1);
+    while (true) ptr = pmm_AllocatePages(1);
 
     outb(0x21, 0xfd);
     outb(0xa1, 0xff);
