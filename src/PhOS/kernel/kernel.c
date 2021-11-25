@@ -5,6 +5,7 @@
 #include "kernel/interrupts/pic.h"
 #include "kernel/logger.h"
 #include "kernel/memory/gdt.h"
+#include "kernel/memory/physical_memory_allocator.h"
 #include "stdlib.h"
 #include "string.h"
 
@@ -12,24 +13,29 @@ void kernelMain(stivale2_struct_t* bootloader_data)
 {
     const char str[] = "PhoenixOS!\n";
 
-    terminalInitialize(bootloader_data);
-    terminalWrite(str, sizeof(str));
-    PH_LOG_INFO("PhoenixOS is Booting...");
-    serialInitialize();
+    // TODO: Check for CPUID Support!
 
-    gdtInitialize();
+    terminal_Initialize(bootloader_data);
+    terminal_Write(str, sizeof(str));
+    PH_LOG_INFO("PhoenixOS is Booting...");
+    serial_Initialize();
+
+    gdt_Initialize();
     PH_LOG_INFO("GDT loaded successfully!");
-    picRemap(0x20, 0x28);
-    idtInitialize();
+    pic_Remap(0x20, 0x28);
+    idt_Initialize();
 
     stivale2_struct_tag_memmap_t* memory_map_tag
         = stivale2GetTag(bootloader_data, STIVALE2_STRUCT_TAG_MEMMAP_ID);
 
-    PH_UNUSED(memory_map_tag);
+    pmm_Initialize(memory_map_tag->memmap, memory_map_tag->entries);
+    
+    void* ptr = NULL;
+    while (true) ptr = pmm_AllocatePages(1);
 
-    // outb(0x21, 0xfd);
-    // outb(0xa1, 0xff);
-    // PH_ASM("sti");
+    outb(0x21, 0xfd);
+    outb(0xa1, 0xff);
+    PH_ASM("sti");
 
     // char c_standard[20];
 

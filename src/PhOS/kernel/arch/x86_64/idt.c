@@ -1,23 +1,24 @@
 #include "idt.h"
 
+#include "kernel/interrupts/pic.h"
 #include "kernel/io/io_access.h"
 #include "kernel/logger.h"
 #include "kernel/memory/gdt.h"
 
-void idtSetDescriptor(uint8_t index, uintptr_t isr, uint8_t flags);
-void idtLoad(idt_entry_t* entries, uint8_t number_of_entries);
+void idt_SetDescriptor(uint8_t index, uintptr_t isr, uint8_t flags);
+void idt_Load(idt_entry_t* entries, uint8_t number_of_entries);
 __attribute__((noreturn)) void             defaultExceptionHandler(void);
 __attribute__((aligned(0x10))) idt_entry_t g_IDT[32];
 
 extern void*                               isr_stub_table[];
-void                                       idtInitialize()
+void                                       idt_Initialize()
 {
     for (uint8_t index = 0; index < 32; index++)
-        idtSetDescriptor(index, (uintptr_t)isr_stub_table[index], 0x8E);
-    idtLoad(g_IDT, 32);
+        idt_SetDescriptor(index, (uintptr_t)isr_stub_table[index], 0x8E);
+    idt_Load(g_IDT, 32);
 }
 
-void idtSetDescriptor(uint8_t interrupt_vector, uintptr_t isr, uint8_t flags)
+void idt_SetDescriptor(uint8_t interrupt_vector, uintptr_t isr, uint8_t flags)
 {
     idt_entry_t* entry = g_IDT + interrupt_vector;
 
@@ -36,7 +37,7 @@ typedef struct
     uint64_t pointer;
 } __attribute__((packed)) idt_descriptor_t;
 
-void idtLoad(idt_entry_t* entries, uint8_t number_of_entries)
+void idt_Load(idt_entry_t* entries, uint8_t number_of_entries)
 {
     PH_LOG_INFO("Loading IDT...");
     idt_descriptor_t idt_descriptor;
