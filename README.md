@@ -29,7 +29,7 @@ python3 bs.py run
 ## TODO:
 - [x] Set up GDT.
 - [x] Load an IDT so that exceptions and interrupts can be handled.
-- [ ] Write a physical memory allocator, a good starting point is a bitmap allocator.
+- [x] Write a physical memory allocator, a good starting point is a bitmap allocator.
 - [ ] Write a virtual memory manager that can map, remap and unmap pages.
 - [ ] Begin parsing ACPI tables, the most important one is the MADT since it contains information about the APIC.
 - [ ] Start up the other CPUs. stivale2 provides a facility to make this less painful.
