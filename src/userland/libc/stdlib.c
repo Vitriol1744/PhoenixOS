@@ -4,23 +4,21 @@
 #include "stdint.h"
 #include "stddef.h"
 #include "string.h"
+#include "math.h"
 
-int atoi(const char* str)
+int32_t atoi(const char* str)
 {
-    int ret = 0;
+    int32_t integer = 0;
     bool is_negative = str[0] == '-';
 
-    int32_t index = 1;
-    size_t string_length = strlen(str);
+    int32_t index = is_negative;
+    size_t string_length = strlen(str), power = string_length - is_negative;
 
-    ret += str[string_length--] - '0';
-    for (; string_length > 0 && str[string_length] != '-'; string_length--, index++)
-    {
-        ret += (str[string_length] - '0') * 10 * index;
-    }
+    for (; index < string_length; index++)
+        integer += (str[index] - 48) * pow(10, --power);
 
-    if (is_negative) ret = -ret;
-    return ret;
+
+    return (is_negative) ? -integer : integer;
 }
 
 char* itoa(int value, char* str, int base)
