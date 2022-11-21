@@ -2,3 +2,11 @@
 /build/
 /serial.log
 /qemu.log
+
+__pycache__/
+
+iso_root/
+
+*.iso
+
+*.log

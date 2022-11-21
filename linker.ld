@@ -1,42 +1,28 @@
-ENTRY(kernelMain)
-
+OUTPUT_FORMAT(elf64-x86-64)
+OUTPUT_ARCH(i386:x86-64)
+ 
+ENTRY(kernelStart)
+ 
+PHDRS
+{
+    text    PT_LOAD    FLAGS((1 << 0) | (1 << 2)); /* Execute + Read */
+    rodata  PT_LOAD    FLAGS((1 << 2));            /* Read only */
+    data    PT_LOAD    FLAGS((1 << 1) | (1 << 2)); /* Write + Read */
+}
+ 
 SECTIONS
 {
-    kernel_physical_offset = 0xFFFFFFFF80000000;
-    . = kernel_physical_offset + 0x200000;
-
-    .stivale2hdr ALIGN(4K) : AT (ADDR (.stivale2hdr) - kernel_physical_offset)
-    {
-        *(.stivale2hdr)
-    }
-
-    .text ALIGN(4K) : AT (ADDR (.text) - kernel_physical_offset)
-    {
-        *(.entry)
-        *(.text .text.*)
-    }
-
-    .rodata ALIGN(4K) : AT (ADDR (.rodata) - kernel_physical_offset)
-    {
-        constructors_start = .;
-        *(.ctors)
-        constructors_end = .;
-
-        destructors_start = .;
-        *(.dtors)
-        destructors_end = .;
-
-        *(.rodata*)
-    }
-
-    .data ALIGN(4K) : AT (ADDR (.data) - kernel_physical_offset)
-    {
-        *(.data .data.*)
-    }
-
-    .bss ALIGN(4K) : AT (ADDR (.bss) - kernel_physical_offset)
-    {
-        *(COMMON)
-        *(.bss .bss.*)
-    }
+    . = 0xffffffff80000000;
+ 
+    .text : { *(.text .text.*) } : text
+    . += CONSTANT(MAXPAGESIZE);
+ 
+    .rodata : { *(.rodata .rodata.*) } : rodata
+    . += CONSTANT(MAXPAGESIZE);
+ 
+    .data : { *(.data .data.*) } : data
+ 
+    .bss : { *(COMMON) *(.bss .bss.*) } : data
+ 
+    /DISCARD/ : { *(.eh_frame) *(.note .note.*) }
 }

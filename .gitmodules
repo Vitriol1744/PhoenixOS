@@ -1,6 +1,4 @@
-[submodule "third_party/stivale"]
-	path = third_party/stivale
-	url = https://github.com/stivale/stivale
-[submodule "third_party/limine"]
-	path = third_party/limine
+[submodule "limine"]
+	path = limine
 	url = https://github.com/limine-bootloader/limine
+	branch = v4.x-branch-binary
