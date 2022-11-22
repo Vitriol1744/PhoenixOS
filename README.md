@@ -1,38 +1,34 @@
 x86-64 Operating System written in C
 
 ## Requirements:
-- python3
 - nasm
 - clang
-- xorriso
+- ld, lld
+- make
+- xorriso 
 - qemu
 #
-if you have python3 installed and your os is debian or arch you can just run
-```
-python3 bs.py setup_debian_based
-```
-or
-```
-python3 bs.py setup_arch_based
-```
-
 ## How to build?
-just do this:
+Simply by doing:
 ```
-python3 bs.py build
+make
 ```
 ### How to run?
 ```
-python3 bs.py run
+make qemu
 ```
 
+### Credits
+Limine - Modern and lightweight bootloader featuring limine boot protokół
+Github Repository - https://github.com/limine-bootloader/limine.git
+
 ## TODO:
-- [x] Set up GDT.
-- [x] Load an IDT so that exceptions and interrupts can be handled.
-- [x] Write a physical memory allocator, a good starting point is a bitmap allocator.
+- [ ] Set up GDT.
+- [ ] Load an IDT so that exceptions and interrupts can be handled.
+- [ ] Write a physical memory allocator, a good starting point is a bitmap allocator.
 - [ ] Write a virtual memory manager that can map, remap and unmap pages.
 - [ ] Begin parsing ACPI tables, the most important one is the MADT since it contains information about the APIC.
-- [ ] Start up the other CPUs. stivale2 provides a facility to make this less painful.
+- [ ] Start up the other CPUs.
 - [ ] Set up an interrupt controller such as the APIC.
 - [ ] Configure a timer such as the Local APIC timer, the PIT, or the HPET.
 - [ ] Implement a scheduler to schedule threads in order make multitasking possible.
