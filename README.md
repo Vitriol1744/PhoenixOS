@@ -28,6 +28,7 @@ Limine - Modern and lightweight bootloader featuring limine boot protokół
 Github Repository - https://github.com/limine-bootloader/limine.git
 
 ## TODO:
+- [ ] Use Trello
 - [ ] Use cmake or setup some other way to build it on other operating systems than Linux.
 - [ ] Write some Simple unit test framework.
 - [ ] Set up GDT.
