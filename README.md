@@ -1,4 +1,6 @@
-x86-64 Operating System written in C
+Modern Unix-like Operating System written in C++
+## Supported architectures
+- x86-64
 
 ## Requirements:
 - nasm
@@ -17,6 +19,9 @@ make
 ```
 make qemu
 ```
+
+### References
+Limine boot protocol - https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md
 
 ### Credits
 Limine - Modern and lightweight bootloader featuring limine boot protokół
