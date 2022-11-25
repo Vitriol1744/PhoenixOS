@@ -24,7 +24,7 @@ make qemu
 Limine boot protocol - https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md
 
 ### Credits
-Limine - Modern and lightweight bootloader featuring limine boot protokół
+Limine - Modern and lightweight bootloader featuring limine boot protocol
 Github Repository - https://github.com/limine-bootloader/limine.git
 
 ## TODO:
