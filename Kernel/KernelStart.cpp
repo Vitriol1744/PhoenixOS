@@ -15,15 +15,15 @@ extern "C" void kernelStart()
     Logger::EnableE9Logging();
     Terminal::Initialize();
     Logger::EnableTerminalLogging();
+    LogTrace("Booting PhoenixOS...\n");
     LogInfo("Bootloader: %s, Version: %s\n", BootInfo::GetBootloaderName(),
             BootInfo::GetBootloaderVersion());
+    LogInfo("Kernel Physical Address: %p\nKernel Virtual Address: %p\n",
+            BootInfo::GetKernelPhysicalAddress(),
+            BootInfo::GetKernelVirtualAddress());
+    LogInfo("Kernel Boot Time: %d\n", BootInfo::GetBootTime());
 
-    // TODO: Use printf when we actually implement it
-    LogTrace("Booting PhoenixOS...\n");
-    LogTrace("\nHello, %#lliWorld!", 15);
-
-    // TODO: Print Boot Time
-    // TODO: Print Kernel Physical and Virtual addresses
+    LogTrace("\nHello, %#-04lliWorld!", 15);
 
     halt();
 }
