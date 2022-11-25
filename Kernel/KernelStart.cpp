@@ -1,20 +1,29 @@
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #include "Drivers/Terminal.hpp"
- 
-static void halt(void) 
+#include "Utility/Logger.hpp"
+
+static void halt(void)
 {
     for (;;) __asm__ volatile("hlt");
 }
- 
-extern "C" void kernelStart() 
+
+extern "C" void kernelStart()
 {
     if (!BootInfo::Initialize()) halt();
-    BootInfo::TerminalWrite("Hello World", 11);
+    Logger::EnableE9Logging();
     Terminal::Initialize();
-    Terminal::ClearScreen(0x00ffff);
-    BootInfo::TerminalWrite("Hello World", 11);
- 
+    Logger::EnableTerminalLogging();
+    LogInfo("Bootloader: %s, Version: %s\n", BootInfo::GetBootloaderName(),
+            BootInfo::GetBootloaderVersion());
+
+    // TODO: Use printf when we actually implement it
+    LogTrace("Booting PhoenixOS...\n");
+    LogTrace("\nHello, %#llxWorld!", 15);
+
+    // TODO: Print Boot Time
+    // TODO: Print Kernel Physical and Virtual addresses
+
     halt();
 }
