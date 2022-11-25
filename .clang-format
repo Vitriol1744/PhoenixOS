@@ -2,8 +2,7 @@ IndentWidth: 4
 BreakBeforeBraces: Allman
 PointerAlignment: Left
 AllowShortBlocksOnASingleLine: Always 
-AllowShortIfStatementsOnASingleLine: Always 
-AllowShortBlocksOnASingleLine: Always
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse 
 IndentCaseLabels: true
 AlignConsecutiveAssignments: AcrossEmptyLinesAndComments
 AlignConsecutiveBitFields: AcrossEmptyLinesAndComments
@@ -28,3 +27,5 @@ BreakBeforeBinaryOperators: All
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeComma
 BreakStringLiterals: true
+NamespaceIndentation: All
+IndentAccessModifiers: true
