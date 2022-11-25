@@ -20,7 +20,7 @@ extern "C" void kernelStart()
 
     // TODO: Use printf when we actually implement it
     LogTrace("Booting PhoenixOS...\n");
-    LogTrace("\nHello, %#llxWorld!", 15);
+    LogTrace("\nHello, %#lliWorld!", 15);
 
     // TODO: Print Boot Time
     // TODO: Print Kernel Physical and Virtual addresses

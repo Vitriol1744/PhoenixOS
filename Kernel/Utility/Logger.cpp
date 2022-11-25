@@ -21,6 +21,13 @@ namespace Logger
         if (logSerial)
             ;
     }
+    template <typename T>
+    static void LogNumber(va_list& args, int base)
+    {
+        char  buf[64];
+        char* str = itoa(va_arg(args, T), buf, base);
+        while (*str) LogChar(*str++);
+    }
     void Log(LogLevel level, const char* fmt, ...)
     {
         va_list args;
@@ -28,8 +35,6 @@ namespace Logger
         Logv(level, fmt, args);
         va_end(args);
     }
-    // TODO: Use some fancy templates to make it less ugly, like really... this
-    // code is mess
     void Logv(LogLevel level, const char* fmt, va_list& args)
     {
         while (*fmt != '\0')
@@ -100,112 +105,40 @@ namespace Logger
                     argLength = ArgLength::eSizeT;
                     fmt++;
                 }
-                bool isSigned = true;
-                int  base     = 10;
+                int base = 10;
                 switch (*fmt)
                 {
                     case 'o':
-                        base     = 8;
-                        isSigned = false;
+                        base = 8;
                         if (altConversion) LogChar('0');
-                        break;
-                    case 'p':
-                    {
-                        isSigned  = false;
-                        argLength = ArgLength::ePointer;
-                    }
+                    case 'p': argLength = ArgLength::ePointer;
                     case 'X':
                     case 'x':
-                        base     = 16;
-                        isSigned = false;
+                        base = 16;
                         if (altConversion) Log(level, "0x");
                     case 'u':
                     {
-                        switch (argLength)
-                        {
-                            case ArgLength::eInt:
-                            {
-                                unsigned int arg = va_arg(args, unsigned int);
-                                char         buf[20];
-                                char*        str = itoa(arg, buf, base);
-                                while (*str) LogChar(*str++);
-                            }
-                            break;
-                            case ArgLength::eLong:
-                            {
-                                unsigned long arg = va_arg(args, unsigned long);
-                                char          buf[20];
-                                char*         str = itoa(arg, buf, base);
-                                while (*str) LogChar(*str++);
-                            }
-                            break;
-                            case ArgLength::eLongLong:
-                            {
-                                unsigned long long arg
-                                    = va_arg(args, unsigned long long);
-                                char  buf[20];
-                                char* str = itoa(arg, buf, base);
-                                while (*str) LogChar(*str++);
-                            }
-                            break;
-                            case ArgLength::eSizeT:
-                            {
-                                size_t arg = va_arg(args, size_t);
-                                char   buf[20];
-                                char*  str = itoa(arg, buf, base);
-                                while (*str) LogChar(*str++);
-                            }
-                            break;
-                            case ArgLength::ePointer:
-                            {
-                                uintptr_t arg = va_arg(args, uintptr_t);
-                                char      buf[20];
-                                char*     str = itoa(arg, buf, base);
-                                while (*str) LogChar(*str++);
-                            }
-                            default: break;
-                        }
+                        if (argLength == ArgLength::eInt)
+                            LogNumber<unsigned int>(args, base);
+                        else if (argLength == ArgLength::eLong)
+                            LogNumber<unsigned long>(args, base);
+                        else if (argLength == ArgLength::eLongLong)
+                            LogNumber<unsigned long long>(args, base);
+                        else if (argLength == ArgLength::eSizeT)
+                            LogNumber<size_t>(args, base);
+                        else if (argLength == ArgLength::ePointer)
+                            LogNumber<uintptr_t>(args, base);
                         break;
                     }
                     case 'd':
                     case 'i':
                     {
-                        switch (argLength)
-                        {
-                            case ArgLength::eInt:
-                            {
-                                int   arg = va_arg(args, int);
-                                char  buf[20];
-                                char* str = itoa(arg, buf, base);
-                                while (*str) LogChar(*str++);
-                            }
-                            break;
-                            case ArgLength::eLong:
-                            {
-                                long  arg = va_arg(args, long);
-                                char  buf[20];
-                                char* str = itoa(arg, buf, base);
-                                while (*str) LogChar(*str++);
-                            }
-                            break;
-                            case ArgLength::eLongLong:
-                            {
-                                long long arg = va_arg(args, long long);
-                                char      buf[20];
-                                char*     str = itoa(arg, buf, base);
-                                while (*str) LogChar(*str++);
-                            }
-                            break;
-                            case ArgLength::eSizeT:
-                            {
-                                size_t arg = va_arg(args, size_t);
-                                char   buf[20];
-                                char*  str = itoa(arg, buf, base);
-                                while (*str) LogChar(*str++);
-                            }
-                            break;
-                            default: break;
-                        }
+                        if (argLength == ArgLength::eInt)
+                            LogNumber<int>(args, base);
+                        else if (argLength == ArgLength::eLong)
+                            LogNumber<long>(args, base);
+                        else if (argLength == ArgLength::eLongLong)
+                            LogNumber<long long>(args, base);
                         break;
                     }
                     case 'c': LogChar(*fmt); break;
