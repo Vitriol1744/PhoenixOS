@@ -16,17 +16,44 @@ namespace Logger
         return;
 #endif
         if (logE9)
-            ;
+            ; // TODO: outb(0xe9, c);
         if (logTerminal) Terminal::PutChar(c);
         if (logSerial)
             ;
     }
     template <typename T>
-    static void LogNumber(va_list& args, int base)
+    static void LogNumber(va_list& args, int base, bool justifyLeft = false,
+                          bool plusSign = false, bool spaceIfNoSign = false,
+                          bool zeroPadding = false, size_t lengthSpecifier = 0)
     {
-        char  buf[64];
-        char* str = itoa(va_arg(args, T), buf, base);
+        char   buf[64];
+        T      value   = va_arg(args, T);
+        char*  str     = itoa(value, buf, base);
+        size_t len     = strlen(str);
+        char   padding = zeroPadding ? '0' : ' ';
+        if (plusSign && lengthSpecifier > 0) lengthSpecifier--;
+        if (!justifyLeft)
+        {
+            while (len < lengthSpecifier)
+            {
+                LogChar(padding);
+                lengthSpecifier--;
+            }
+        }
+        if (value >= 0)
+        {
+            if (plusSign) LogChar('+');
+            else if (spaceIfNoSign) LogChar(' ');
+        }
         while (*str) LogChar(*str++);
+        if (justifyLeft)
+        {
+            while (len < lengthSpecifier)
+            {
+                LogChar(padding);
+                lengthSpecifier--;
+            }
+        }
     }
     void Log(LogLevel level, const char* fmt, ...)
     {
@@ -37,14 +64,35 @@ namespace Logger
     }
     void Logv(LogLevel level, const char* fmt, va_list& args)
     {
+        switch (level)
+        {
+            case LogLevel::eTrace:
+                Terminal::SetForegroundColor(0x00ff00);
+                Terminal::SetBackgroundColor(0x000000);
+                break;
+            case LogLevel::eInfo:
+                Terminal::SetForegroundColor(0x00ffff);
+                Terminal::SetBackgroundColor(0x000000);
+                break;
+            case LogLevel::eWarn:
+                Terminal::SetForegroundColor(0xffff00);
+                Terminal::SetBackgroundColor(0x000000);
+                break;
+            case LogLevel::eError:
+                Terminal::SetForegroundColor(0xff0000);
+                Terminal::SetBackgroundColor(0x000000);
+                break;
+            case LogLevel::eFatal:
+                Terminal::SetForegroundColor(0xffffff);
+                Terminal::SetBackgroundColor(0xff0000);
+                break;
+        }
+
         while (*fmt != '\0')
         {
             if (*fmt == '%')
             {
                 fmt++;
-                // TODO: We should actually use these flags
-                // FIXME: Look at this code again some day and fix all of the
-                // problems with it, cause it is really ugly
                 bool leftJustify   = false;
                 bool plusSign      = false;
                 bool spaceIfNoSign = false;
@@ -74,7 +122,8 @@ namespace Logger
                     fmt++;
                 }
                 int lengthSpecifier = 0;
-                if (numStrLen > 0) lengthSpecifier = atoi(numStart, numStrLen);
+                if (numStrLen > 0)
+                    lengthSpecifier = atoi<size_t>(numStart, numStrLen);
                 if (*fmt == '*')
                 {
                     lengthSpecifier = va_arg(args, int);
@@ -106,6 +155,9 @@ namespace Logger
                     fmt++;
                 }
                 int base = 10;
+#define LogNum(type)                                                           \
+    LogNumber<type>(args, base, leftJustify, plusSign, spaceIfNoSign,          \
+                    zeroPadding, lengthSpecifier)
                 switch (*fmt)
                 {
                     case 'o':
@@ -118,27 +170,23 @@ namespace Logger
                         if (altConversion) Log(level, "0x");
                     case 'u':
                     {
-                        if (argLength == ArgLength::eInt)
-                            LogNumber<unsigned int>(args, base);
+                        if (argLength == ArgLength::eInt) LogNum(unsigned int);
                         else if (argLength == ArgLength::eLong)
-                            LogNumber<unsigned long>(args, base);
+                            LogNum(unsigned long);
                         else if (argLength == ArgLength::eLongLong)
-                            LogNumber<unsigned long long>(args, base);
-                        else if (argLength == ArgLength::eSizeT)
-                            LogNumber<size_t>(args, base);
+                            LogNum(unsigned long long);
+                        else if (argLength == ArgLength::eSizeT) LogNum(size_t);
                         else if (argLength == ArgLength::ePointer)
-                            LogNumber<uintptr_t>(args, base);
+                            LogNum(uintptr_t);
                         break;
                     }
                     case 'd':
                     case 'i':
                     {
-                        if (argLength == ArgLength::eInt)
-                            LogNumber<int>(args, base);
-                        else if (argLength == ArgLength::eLong)
-                            LogNumber<long>(args, base);
+                        if (argLength == ArgLength::eInt) LogNum(int);
+                        else if (argLength == ArgLength::eLong) LogNum(long);
                         else if (argLength == ArgLength::eLongLong)
-                            LogNumber<long long>(args, base);
+                            LogNum(long long);
                         break;
                     }
                     case 'c': LogChar(*fmt); break;
@@ -159,6 +207,9 @@ namespace Logger
             }
             else LogChar(*fmt++);
         }
+
+        Terminal::SetForegroundColor(0xffffff);
+        Terminal::SetBackgroundColor(0x000000);
     }
 
     void EnableE9Logging() { logE9 = true; }
