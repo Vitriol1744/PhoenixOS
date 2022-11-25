@@ -9,7 +9,7 @@ CXX := clang++
 AS := nasm
 LD := ld
 
-CXX_DEFINES := PH_DEBUG PH_ARCH=PH_ARCH_X86_64
+CXX_DEFINES := PH_DEBUG PH_ARCH=PH_ARCH_X86_64 PH_ENABLE_LOGGING=true
 CXX_DEF_FLAGS := $(addprefix -D,$(CXX_DEFINES))
 
 CXX_INC_DIRS := limine Kernel
@@ -23,8 +23,12 @@ CXX_FLAGS := $(CXX_DEF_FLAGS) $(CXX_INC_FLAGS) $(CXX_WARN_FLAGS) $(INTERNAL_CXX_
 AS_FLAGS := $(AS_INC_FLAGS) -felf64
 LD_FLAGS := -nostdlib -no-pie -melf_x86_64 -static -z max-page-size=0x1000 -s -T $(LINKER_FILE)
 
-QEMUFLAGS := -M q35,smm=off -net none -smp 4 -enable-kvm -cpu host -d int,guest_errors -d cpu_reset -m 2G -no-shutdown -no-reboot -debugcon file:debug.log -serial file:serial.log -D ./qemu.log -monitor stdio -device isa-debug-exit
-
+QEMUFLAGS := -M q35,smm=off -net none -smp 4 -d int,guest_errors -d cpu_reset -m 2G -no-shutdown -no-reboot -debugcon file:debug.log -D ./qemu.log -device isa-debug-exit
+QEMU_RELEASE_FLAGS := -enable-kvm -cpu host -serial stdio
+# flags we use during development when we don't need to debug anything
+QEMU_DEV_FLAGS := -serial stdio
+# flags we use when we wanna debug
+QEMU_DEBUG_FLAGS := -serial file:serial.log -monitor stdio
 SRCS := $(shell find $(SRC_DIR) -name '*.cpp' -or -name '*.asm')
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 
@@ -49,8 +53,11 @@ $(BUILD_DIR)/%.asm.o: %.asm
 limine/limine-deploy:
 	make -C limine
 
+debug:
+	qemu-system-x86_64 $(QEMUFLAGS) $(QEMU_DEBUG_FLAGS) $(BUILD_DIR)/$(IMAGE_ISO)
+
 qemu:
-	qemu-system-x86_64 $(QEMUFLAGS) $(BUILD_DIR)/$(IMAGE_ISO)
+	qemu-system-x86_64 $(QEMUFLAGS) $(QEMU_DEV_FLAGS) $(BUILD_DIR)/$(IMAGE_ISO)
 
 .PHONY: clean
 clean:
