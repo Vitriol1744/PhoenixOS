@@ -14,7 +14,7 @@ struct IDTEntry
 #if PH_ARCH == PH_ARCH_X86_64
     uint8_t ist;
 #elif PH_ARCH == PH_ARCH_IA32
-    uin8_t   reserved;
+    uint8_t  reserved;
 #endif
     union
     {
