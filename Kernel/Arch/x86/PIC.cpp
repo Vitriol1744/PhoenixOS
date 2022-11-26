@@ -141,7 +141,7 @@ namespace PIC
     }
     void SendEOI(uint8_t irq)
     {
-        if (HandleSpuriousInterrupt()) return;
+        if (HandleSpuriousInterrupt(irq)) return;
 
         if (irq >= 8) IO::Out<byte>(PIC2_COMMAND, OCW2_SEND_EOI);
         IO::Out<byte>(PIC1_COMMAND, OCW2_SEND_EOI);
