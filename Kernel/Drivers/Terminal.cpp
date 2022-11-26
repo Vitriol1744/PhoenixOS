@@ -7,10 +7,10 @@ extern unsigned char zap_vga09_psf[];
 
 struct PSF1Font
 {
-    public:
-        uint16_t magic;
-        uint8_t  mode;
-        uint8_t  charsize;
+  public:
+    uint16_t magic;
+    uint8_t  mode;
+    uint8_t  charsize;
 };
 
 static constexpr const uint32_t PSF1_FONT_WIDTH  = 8;
