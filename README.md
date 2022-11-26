@@ -6,18 +6,27 @@ Modern Unix-like Operating System written in C++
 - nasm
 - clang
 - ld, lld
+- cmake
 - make
 - xorriso 
 - qemu
 #
 ## How to build?
-Simply by doing:
+first run this to generate cmake cache
 ```
-make
+cmake -B build .
+```
+next run this to update dependencies
+```
+cmake --build . --target setup
+```
+and finally you can build
+```
+cmake --build .
 ```
 ### How to run?
 ```
-make qemu
+cmake --build . --target qemu
 ```
 
 ### References
