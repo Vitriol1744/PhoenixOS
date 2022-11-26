@@ -129,8 +129,20 @@ namespace PIC
         IO::Out<byte>(PIC2_DATA, 0x00);
     }
 
+    // Returns true if interrupt was spurious
+    static bool HandleSpuriousInterrupt(uint8_t irq)
+    {
+        if (irq != 8 && irq != 15) return false;
+        if (GetISR() & (1 << irq)) return false;
+
+        if (irq == 15) IO::Out<byte>(PIC1_COMMAND, OCW2_SEND_EOI);
+
+        return true;
+    }
     void SendEOI(uint8_t irq)
     {
+        if (HandleSpuriousInterrupt()) return;
+
         if (irq >= 8) IO::Out<byte>(PIC2_COMMAND, OCW2_SEND_EOI);
         IO::Out<byte>(PIC1_COMMAND, OCW2_SEND_EOI);
     }
