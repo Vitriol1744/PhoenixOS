@@ -7,9 +7,9 @@ static constexpr const uint32_t FRAMEBUFFER_MEMORY_MODEL_RGB = 0x01;
 struct Framebuffer
 {
     uintptr_t base;
-    uint64_t  width;
-    uint64_t  height;
-    uint64_t  pitch;
+    uint32_t  width;
+    uint32_t  height;
+    uint32_t  pitch;
     uint16_t  bitsPerPixel;
     uint8_t   memoryModel;
     uint8_t   redMaskSize;
@@ -30,10 +30,32 @@ struct Framebuffer
     }
 };
 
+enum MemoryMapEntryType
+{
+    eUsable = 0,
+    eReserved,
+    eACPI_Reclaimable,
+    eACPI_NVS,
+    eBadMemory,
+    eBootloaderReclaimable,
+    eKernelAndModules,
+    eFramebuffer,
+};
+
+struct MemoryMapEntry
+{
+    uintptr_t base;
+    uint64_t  length;
+    uint64_t  type;
+};
+
+using MemoryMap = MemoryMapEntry**;
+
 namespace BootInfo
 {
     bool         Initialize();
     void         TerminalWrite(const char* str, const uint64_t length);
+
     Framebuffer* GetFramebuffer();
     const char*  GetBootloaderName();
     const char*  GetBootloaderVersion();
@@ -41,4 +63,5 @@ namespace BootInfo
     uint64_t     GetKernelPhysicalAddress();
     uint64_t     GetKernelVirtualAddress();
 
+    MemoryMap    GetMemoryMap(uint64_t& entryCount);
 }; // namespace BootInfo

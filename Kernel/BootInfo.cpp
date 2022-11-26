@@ -1,5 +1,7 @@
 #include "BootInfo.hpp"
 
+#include "Common.hpp"
+
 #include "limine.h"
 
 static constexpr const uint32_t DEFAULT_STACK_SIZE = 65536;
@@ -61,7 +63,9 @@ static volatile struct limine_kernel_address_request kernelAddressRequest = {
     .revision = 0,
 };
 
-static Framebuffer framebuffer = {};
+static Framebuffer      framebuffer         = {};
+static MemoryMapEntry** memoryMap           = nullptr;
+static uint64_t         memoryMapEntryCount = 0;
 namespace BootInfo
 {
     bool Initialize()
@@ -93,6 +97,12 @@ namespace BootInfo
         framebuffer.blueMaskSize   = limineFramebuffer->blue_mask_size;
         framebuffer.blueMaskShift  = limineFramebuffer->blue_mask_shift;
 
+        if (!memmapRequest.response || memmapRequest.response->entry_count == 0)
+            panic("Failed to acquire limine memory map entries!");
+
+        memoryMap           = (MemoryMapEntry**)memmapRequest.response->entries;
+        memoryMapEntryCount = memmapRequest.response->entry_count;
+
         return true;
     }
     void TerminalWrite(const char* str, const uint64_t length)
@@ -117,6 +127,12 @@ namespace BootInfo
     uint64_t GetKernelVirtualAddress()
     {
         return kernelAddressRequest.response->virtual_base;
+    }
+
+    MemoryMap GetMemoryMap(uint64_t& entryCount)
+    {
+        entryCount = memoryMapEntryCount;
+        return memoryMap;
     }
 
 } // namespace BootInfo
