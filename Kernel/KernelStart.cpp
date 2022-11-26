@@ -1,6 +1,8 @@
 #include "Arch/Arch.hpp"
 
 #include "Drivers/Terminal.hpp"
+#include "Memory/PhysicalMemoryManager.hpp"
+
 #include "Utility/Logger.hpp"
 
 #include <stddef.h>
@@ -25,9 +27,11 @@ extern "C" void kernelStart()
             BootInfo::GetKernelVirtualAddress());
     LogInfo("Kernel Boot Time: %d\n", BootInfo::GetBootTime());
 
-    Arch::Initialize();
-    __asm__ volatile("sti;int 0x01");
-    LogTrace("\nHello, %#-04lliWaaorld!", 15);
+    // Arch::Initialize();
+    PhysicalMemoryManager::Initialize();
+
+    //__asm__ volatile("sti;");
+    // LogTrace("\nHello, %#-04lliWaaorld!", 15);
 
     halt();
 }
