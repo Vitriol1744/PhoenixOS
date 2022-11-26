@@ -14,7 +14,7 @@ Modern Unix-like Operating System written in C++
 ## How to build?
 first run this to generate cmake cache
 ```
-cmake -B build .
+cmake .
 ```
 next run this to update dependencies
 ```
