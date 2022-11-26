@@ -11,6 +11,6 @@ namespace Arch
     {
         s_IDT.Initialize();
         IDT::Load(&s_IDT);
-        PIC::MaskAll();
+        PIC::MaskAllIRQs();
     }
 } // namespace Arch
