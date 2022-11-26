@@ -15,12 +15,17 @@ add_definitions (-DPH_ENABLE_LOGGING=true -DPH_DEBUG)
 set (CXX_WARNING_LEVELS -Wall -Wextra -Wpedantic)
 set (INTERNAL_CXX_FLAGS -ffreestanding -nostdlib -mcmodel=kernel -fno-exceptions -fno-rtti)
 set (XORRISO_FLAGS -as mkisofs -b limine-cd.bin -no-emul-boot -boot-load-size 4 -boot-info-table --efi-boot limine-cd-efi.bin --efi-boot-part --efi-boot-image --protective-msdos-label)
+set (QEMU_FLAGS -M q35,smm=off -net none -smp 4 -d int,guest_errors -d cpu_reset -m 128M -no-shutdown -no-reboot -debugcon file:debug.log -D ./qemu.log -device isa-debug-exit)
+list (APPEND QEMU_FLAGS -serial stdio)
 set (LINKER_FILE linker.${TARGET_ARCH}.ld)
 
 if (${TARGET_ARCH} STREQUAL x86_64)
-list (APPEND INTERNAL_CXX_FLAGS -m64 -target x86_64-none)
-add_definitions (-DPH_ARCH=PH_ARCH_X86_64)
-endif()
+    list (APPEND INTERNAL_CXX_FLAGS -m64 -target x86_64-none)
+    add_definitions (-DPH_ARCH=PH_ARCH_X86_64)
+elseif ($(TARGET_ARCH) STREQUAL ia32)
+    list (APPEND INTERNAL_CXX_FLAGS -m32 -target i386-none)
+    add_definitions (-DPH_ARCH=PH_ARCH_IA32)
+endif ()
 
 file (GLOB_RECURSE SOURCES "Kernel/*.cpp" "Kernel/*/*.cpp" "Kernel/*/*.${TARGET_ARCH}.asm")
 
@@ -45,4 +50,4 @@ add_custom_command (TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND xorriso ${XORRISO_FLAGS} ${ISO_ROOT} -o ${ISO_ROOT}/${PROJECT_NAME}.iso 
     COMMAND ./limine/limine-deploy ${ISO_ROOT}/${PROJECT_NAME}.iso 
     DEPENDS ${BUILD_LIMINE})
-add_custom_target (qemu COMMAND qemu-system-x86_64 ${ISO_ROOT}/${PROJECT_NAME}.iso DEPENDS ${PROJECT_NAME})
+add_custom_target (qemu COMMAND qemu-system-x86_64 ${QEMU_FLAGS} ${ISO_ROOT}/${PROJECT_NAME}.iso DEPENDS ${PROJECT_NAME})
