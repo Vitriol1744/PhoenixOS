@@ -1,4 +1,4 @@
-#include "Arch/x86/IDT.hpp"
+#include "Arch/Arch.hpp"
 
 #include "Drivers/Terminal.hpp"
 #include "Utility/Logger.hpp"
@@ -11,7 +11,6 @@ static void halt(void)
     for (;;) __asm__ volatile("hlt");
 }
 
-static IDT      idt;
 extern "C" void kernelStart()
 {
     if (!BootInfo::Initialize()) halt();
@@ -21,15 +20,14 @@ extern "C" void kernelStart()
     LogTrace("\nBooting PhoenixOS...\n");
     LogInfo("Bootloader: %s, Version: %s\n", BootInfo::GetBootloaderName(),
             BootInfo::GetBootloaderVersion());
-    LogInfo("Kernel Physical Address: %p\nKernel Virtual Address: %p\n",
+    LogInfo("Kernel Physical Address: %#p\nKernel Virtual Address: %#p\n",
             BootInfo::GetKernelPhysicalAddress(),
             BootInfo::GetKernelVirtualAddress());
     LogInfo("Kernel Boot Time: %d\n", BootInfo::GetBootTime());
 
-    idt.Initialize();
-    IDT::Load(&idt);
-    __asm__ volatile("int 0x10");
-    LogTrace("\nHello, %#-04lliWorld!", 15);
+    Arch::Initialize();
+    __asm__ volatile("sti;");
+    LogTrace("\nHello, %#-04lliWaaorld!", 15);
 
     halt();
 }

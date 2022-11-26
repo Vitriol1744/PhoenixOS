@@ -6,8 +6,8 @@
 
 struct StackFrame
 {
-    StackFrame* ebp;
-    uintptr_t   eip;
+    StackFrame* rbp;
+    uintptr_t   rip;
 };
 
 inline void stackTrace()
@@ -22,8 +22,8 @@ inline void stackTrace()
     while (stackFrame != nullptr)
     {
         // TODO: Figure out a way to resolve function names
-        LogFatal("0x%x\n", stackFrame->eip);
-        stackFrame = stackFrame->ebp;
+        LogFatal("%#p\n", stackFrame->rip);
+        stackFrame = stackFrame->rbp;
     }
 }
 
