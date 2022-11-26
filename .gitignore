@@ -10,3 +10,11 @@ iso_root/
 *.iso
 
 *.log
+
+CMakeCache.txt
+
+cmake_install.cmake
+
+CMakeFiles/3.25.0/
+
+CMakeFiles/
