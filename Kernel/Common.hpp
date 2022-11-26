@@ -4,13 +4,15 @@
 
 #include "Utility/Logger.hpp"
 
+#define BIT(n) (1 << n)
+
 struct StackFrame
 {
     StackFrame* rbp;
     uintptr_t   rip;
 };
 
-inline void stackTrace()
+inline static void stackTrace()
 {
     StackFrame* stackFrame;
 #if PH_ARCH == PH_ARCH_X86_64
@@ -27,7 +29,7 @@ inline void stackTrace()
     }
 }
 
-void panic(const char* msg, ...)
+inline static void panic(const char* msg, ...)
 {
     Terminal::ClearScreen(0x0000ff);
     LogFatal("Kernel Panic!\n");
