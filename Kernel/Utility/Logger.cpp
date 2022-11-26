@@ -145,7 +145,7 @@ namespace Logger
                     argLength = ArgLength::eLong;
                     if (*fmt == 'l')
                     {
-                        argLength == ArgLength::eLongLong;
+                        argLength = ArgLength::eLongLong;
                         fmt++;
                     }
                 }
@@ -167,14 +167,18 @@ namespace Logger
                     case 'X':
                     case 'x':
                         base = 16;
-                        if (altConversion) Log(level, "0x");
+                        if (altConversion)
+                        {
+                            LogChar('0');
+                            LogChar('x');
+                        }
                     case 'u':
                     {
                         if (argLength == ArgLength::eInt) LogNum(unsigned int);
                         else if (argLength == ArgLength::eLong)
                             LogNum(unsigned long);
                         else if (argLength == ArgLength::eLongLong)
-                            LogNum(unsigned long long);
+                            LogNum(unsigned long);
                         else if (argLength == ArgLength::eSizeT) LogNum(size_t);
                         else if (argLength == ArgLength::ePointer)
                             LogNum(uintptr_t);
@@ -186,7 +190,7 @@ namespace Logger
                         if (argLength == ArgLength::eInt) LogNum(int);
                         else if (argLength == ArgLength::eLong) LogNum(long);
                         else if (argLength == ArgLength::eLongLong)
-                            LogNum(long long);
+                            LogNum(long);
                         break;
                     }
                     case 'c': LogChar(*fmt); break;
