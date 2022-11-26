@@ -12,7 +12,6 @@ exception%1:
 %else
     xor eax, eax
 %endif
-    push ebp
     ; error code
     push eax
     ; exception vector

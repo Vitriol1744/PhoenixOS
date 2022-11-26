@@ -56,11 +56,10 @@ const char*    exceptionNames[] = {
 using ExceptionHandler = void (*)();
 extern "C" ExceptionHandler exception_handlers[32];
 
-extern "C" noreturn __attribute__((cdecl)) void
-raiseException(uint32_t exceptionVector, uint32_t errorCode, uintptr_t rbp,
-               uintptr_t rip)
+extern "C" void raiseException(uint32_t exceptionVector, uint32_t errorCode,
+                               uintptr_t rip)
 {
-    panic("Captured exception: '%s'\nError Code: %llu\nrip: %#p",
+    panic("Captured exception: '%s'\nError Code: %d\nrip: %#p",
           exceptionNames[exceptionVector], errorCode, rip);
 }
 struct InterruptFrame;
@@ -103,7 +102,7 @@ void IDT::Load(IDT* idt)
 }
 
 #if PH_ARCH == PH_ARCH_X86_64
-struct interruptFrame
+struct InterruptFrame
 {
     uint64_t rip;
     uint64_t cs;
@@ -113,7 +112,7 @@ struct interruptFrame
 };
 // TODO: Using int thunk might be a good idea
 #elif PH_ARCH == PH_ARCH_IA32
-struct interruptFrame
+struct InterruptFrame
 {
     uint32_t rip;
     uint32_t cs;
@@ -124,6 +123,6 @@ struct interruptFrame
 __attribute__((interrupt)) void
 unhandledInterrupt(InterruptFrame* interruptFrame)
 {
-    LogWarn("Unhandled interrupt has occured!\n");
+    LogWarn("Unhandled interrupt has occured! rip: %#p\n", interruptFrame->rip);
     __asm__("cli; hlt");
 }

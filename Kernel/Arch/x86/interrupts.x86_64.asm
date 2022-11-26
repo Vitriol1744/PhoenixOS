@@ -12,11 +12,10 @@ exception%1:
 %else
     xor rax, rax
 %endif
-    pop rcx
+    pop rdx
     
     mov rdi, %1
     mov rsi, rax
-    mov rdx, rbp
     call raiseException
     iretq
 %endmacro
