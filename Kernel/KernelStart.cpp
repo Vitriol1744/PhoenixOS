@@ -26,7 +26,7 @@ extern "C" void kernelStart()
     LogInfo("Kernel Boot Time: %d\n", BootInfo::GetBootTime());
 
     Arch::Initialize();
-    __asm__ volatile("sti;");
+    __asm__ volatile("sti;int 0x01");
     LogTrace("\nHello, %#-04lliWaaorld!", 15);
 
     halt();
