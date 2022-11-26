@@ -158,6 +158,30 @@ qemu/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/qemu.dir/build.make CMakeFiles/qemu.dir/build
 .PHONY : qemu/fast
 
+Kernel/Arch/x86/Arch.o: Kernel/Arch/x86/Arch.cpp.o
+.PHONY : Kernel/Arch/x86/Arch.o
+
+# target to build an object file
+Kernel/Arch/x86/Arch.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/Arch.cpp.o
+.PHONY : Kernel/Arch/x86/Arch.cpp.o
+
+Kernel/Arch/x86/Arch.i: Kernel/Arch/x86/Arch.cpp.i
+.PHONY : Kernel/Arch/x86/Arch.i
+
+# target to preprocess a source file
+Kernel/Arch/x86/Arch.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/Arch.cpp.i
+.PHONY : Kernel/Arch/x86/Arch.cpp.i
+
+Kernel/Arch/x86/Arch.s: Kernel/Arch/x86/Arch.cpp.s
+.PHONY : Kernel/Arch/x86/Arch.s
+
+# target to generate assembly for a file
+Kernel/Arch/x86/Arch.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/Arch.cpp.s
+.PHONY : Kernel/Arch/x86/Arch.cpp.s
+
 Kernel/Arch/x86/IDT.o: Kernel/Arch/x86/IDT.cpp.o
 .PHONY : Kernel/Arch/x86/IDT.o
 
@@ -181,6 +205,30 @@ Kernel/Arch/x86/IDT.s: Kernel/Arch/x86/IDT.cpp.s
 Kernel/Arch/x86/IDT.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/IDT.cpp.s
 .PHONY : Kernel/Arch/x86/IDT.cpp.s
+
+Kernel/Arch/x86/PIC.o: Kernel/Arch/x86/PIC.cpp.o
+.PHONY : Kernel/Arch/x86/PIC.o
+
+# target to build an object file
+Kernel/Arch/x86/PIC.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/PIC.cpp.o
+.PHONY : Kernel/Arch/x86/PIC.cpp.o
+
+Kernel/Arch/x86/PIC.i: Kernel/Arch/x86/PIC.cpp.i
+.PHONY : Kernel/Arch/x86/PIC.i
+
+# target to preprocess a source file
+Kernel/Arch/x86/PIC.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/PIC.cpp.i
+.PHONY : Kernel/Arch/x86/PIC.cpp.i
+
+Kernel/Arch/x86/PIC.s: Kernel/Arch/x86/PIC.cpp.s
+.PHONY : Kernel/Arch/x86/PIC.s
+
+# target to generate assembly for a file
+Kernel/Arch/x86/PIC.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/PIC.cpp.s
+.PHONY : Kernel/Arch/x86/PIC.cpp.s
 
 Kernel/Arch/x86/interrupts.x86_64.o: Kernel/Arch/x86/interrupts.x86_64.asm.o
 .PHONY : Kernel/Arch/x86/interrupts.x86_64.o
@@ -321,9 +369,15 @@ help:
 	@echo "... qemu"
 	@echo "... setup"
 	@echo "... PhoenixOS"
+	@echo "... Kernel/Arch/x86/Arch.o"
+	@echo "... Kernel/Arch/x86/Arch.i"
+	@echo "... Kernel/Arch/x86/Arch.s"
 	@echo "... Kernel/Arch/x86/IDT.o"
 	@echo "... Kernel/Arch/x86/IDT.i"
 	@echo "... Kernel/Arch/x86/IDT.s"
+	@echo "... Kernel/Arch/x86/PIC.o"
+	@echo "... Kernel/Arch/x86/PIC.i"
+	@echo "... Kernel/Arch/x86/PIC.s"
 	@echo "... Kernel/Arch/x86/interrupts.x86_64.o"
 	@echo "... Kernel/BootInfo.o"
 	@echo "... Kernel/BootInfo.i"
