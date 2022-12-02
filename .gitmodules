@@ -2,3 +2,6 @@
 	path = limine
 	url = https://github.com/limine-bootloader/limine
 	branch = v4.x-branch-binary
+[submodule "libstdcxx-headers"]
+	path = libstdcxx-headers
+	url = https://github.com/ilobilo/libstdcxx-headers
