@@ -14,6 +14,8 @@ struct IDTR
 };
 #pragma pack(pop)
 
+alignas(0x10) IDTEntry entries[MAX_IDT_ENTRIES];
+
 #pragma region exception_names
 const char*    exceptionNames[] = {
        "Divide-by-zero",
@@ -75,35 +77,37 @@ void                            IDT::Initialize()
         RegisterInterruptHandler(
             vector, reinterpret_cast<uintptr_t>(unhandledInterrupt), 0x8e);
 }
-
-void IDT::RegisterInterruptHandler(uint8_t vector, uintptr_t isr, uint8_t flags)
+namespace IDT
 {
-    IDTEntry* entry   = entries + vector;
-    entry->isrLow     = isr & 0xffff;
-    entry->kernelCS   = GDT_KERNEL_CODE_SELECTOR64;
-    entry->attributes = flags;
-    entry->reserved   = 0;
+    void RegisterInterruptHandler(uint8_t vector, uintptr_t isr, uint8_t flags)
+    {
+        IDTEntry* entry   = entries + vector;
+        entry->isrLow     = isr & 0xffff;
+        entry->kernelCS   = GDT_KERNEL_CODE_SELECTOR64;
+        entry->attributes = flags;
+        entry->reserved   = 0;
 #if PH_ARCH == PH_ARCH_X86_64
-    entry->ist       = 0;
-    entry->isrMiddle = (isr & 0xffff0000) >> 16;
-    entry->isrHigh   = (isr & 0xffffffff00000000) >> 32;
+        entry->ist       = 0;
+        entry->isrMiddle = (isr & 0xffff0000) >> 16;
+        entry->isrHigh   = (isr & 0xffffffff00000000) >> 32;
 #elif PH_ARCH == PH_ARCH_IA32
-    entry->isrHigh = isr >> 16;
+        entry->isrHigh = isr >> 16;
 #endif
-}
+    }
 
-void IDT::Load(IDT* idt)
-{
-    IDTR idtr  = {};
-    idtr.limit = sizeof(idt->entries) - 1;
-    idtr.base  = reinterpret_cast<uintptr_t>(idt->entries);
+    void Load()
+    {
+        IDTR idtr  = {};
+        idtr.limit = sizeof(entries) - 1;
+        idtr.base  = reinterpret_cast<uintptr_t>(entries);
 
-    __asm__ volatile("lidt %0" : : "m"(idtr));
-}
-
+        __asm__ volatile("lidt %0" : : "m"(idtr));
+    }
+} // namespace IDT
 #if PH_ARCH == PH_ARCH_X86_64
 struct InterruptFrame
 {
+    uint64_t interruptNumber;
     uint64_t rip;
     uint64_t cs;
     uint64_t rflags;
@@ -124,5 +128,5 @@ __attribute__((interrupt)) void
 unhandledInterrupt(InterruptFrame* interruptFrame)
 {
     LogWarn("Unhandled interrupt has occured! rip: %#p\n", interruptFrame->rip);
-    __asm__("cli; hlt");
+    __asm__("cli;hlt");
 }

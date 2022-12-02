@@ -40,14 +40,10 @@ struct IDTEntry
 inline constexpr const uint32_t GATE_TYPE_INTERRUPT = 0xe;
 inline constexpr const uint32_t GATE_TYPE_TRAP      = 0xf;
 
-class IDT
+namespace IDT
 {
-  public:
     void Initialize();
     void RegisterInterruptHandler(uint8_t vector, uintptr_t isr, uint8_t flags);
 
-    static void Load(IDT* idt);
-
-  private:
-    alignas(0x10) IDTEntry entries[MAX_IDT_ENTRIES];
-};
+    void Load();
+} // namespace IDT
