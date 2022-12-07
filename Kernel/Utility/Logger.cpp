@@ -21,6 +21,10 @@ namespace Logger
         if (logSerial)
             ;
     }
+    static void LogString(const char* str)
+    {
+        while (*str != '\0') LogChar(*str++);
+    }
     template <typename T>
     static void LogNumber(va_list& args, int base, bool justifyLeft = false,
                           bool plusSign = false, bool spaceIfNoSign = false,
@@ -61,6 +65,7 @@ namespace Logger
         va_start(args, fmt);
         Logv(level, fmt, args);
         va_end(args);
+        Terminal::PrintString("\n\r");
     }
     void Logv(LogLevel level, const char* fmt, va_list& args)
     {
@@ -69,6 +74,7 @@ namespace Logger
             case LogLevel::eTrace:
                 Terminal::SetForegroundColor(0x00ff00);
                 Terminal::SetBackgroundColor(0x000000);
+
                 break;
             case LogLevel::eInfo:
                 Terminal::SetForegroundColor(0x00ffff);
