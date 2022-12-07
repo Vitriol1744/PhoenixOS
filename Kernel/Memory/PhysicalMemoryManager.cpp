@@ -38,7 +38,6 @@ namespace PhysicalMemoryManager
                     break;
                 default: break;
             }
-            LogWarn("T: %llx\nF: %llx\n", totalMemory, freeMemory);
         }
 
         uint32_t bitmapSize = memoryTop / PAGE_SIZE / 8;
@@ -48,7 +47,8 @@ namespace PhysicalMemoryManager
             if (memoryMap[i]->type == MEMORY_MAP_USABLE
                 && memoryMap[i]->length > bitmapSize)
             {
-                bitmap.data = (uint8_t*)memoryMap[i]->base;
+                bitmap.data
+                    = (uint8_t*)memoryMap[i]->base + BootInfo::GetHHDMOffset();
                 bitmap.size = bitmapSize;
                 bitmap.SetAll(0xff);
                 memoryMap[i]->base += bitmapSize;
@@ -60,13 +60,9 @@ namespace PhysicalMemoryManager
         {
             if (memoryMap[i]->type != MEMORY_MAP_USABLE) continue;
 
-            LogInfo("Free: %#p, Index: %d\n", memoryMap[i]->base,
-                    memoryMap[i]->base / PAGE_SIZE);
             for (uintptr_t page = 0; page < memoryMap[i]->length;
                  page += PAGE_SIZE)
-            {
                 bitmap.SetIndex((memoryMap[i]->base + page) / PAGE_SIZE, false);
-            }
         }
         KernelHeap::Initialize();
         return true;
@@ -93,6 +89,8 @@ namespace PhysicalMemoryManager
     }
     void* AllocatePages(size_t count)
     {
+        static uint32_t all = 0;
+        all++;
         static uint64_t lastIndex = 0;
         if (count == 0) return nullptr;
 
@@ -102,7 +100,7 @@ namespace PhysicalMemoryManager
         {
             lastIndex = 0;
             ret       = FindFreeRegion(lastIndex, count, i);
-            if (!ret) panic("Out of memory!");
+            if (!ret) panic("Out of memory!, %d", all);
         }
 
         freeMemory -= count * PAGE_SIZE;
@@ -111,7 +109,7 @@ namespace PhysicalMemoryManager
     void* CallocatePages(size_t count)
     {
         void* ret = AllocatePages(count);
-        memset(ret, 0, count);
+        memset((uint8_t*)ret + BootInfo::GetHHDMOffset(), 0, count * PAGE_SIZE);
 
         return ret;
     }
