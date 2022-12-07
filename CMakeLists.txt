@@ -13,10 +13,10 @@ set (CMAKE_CXX_COMPILER clang++)
 
 add_definitions (-DPH_ENABLE_LOGGING=true -DPH_DEBUG)
 set (CXX_WARNING_LEVELS -Wall -Wextra -Wpedantic)
-set (INTERNAL_CXX_FLAGS -ffreestanding -nostdlib -mcmodel=kernel -fno-exceptions -fno-rtti)
+set (INTERNAL_CXX_FLAGS -g -O0 -ffreestanding -nostdlib -mcmodel=kernel -fno-exceptions -fno-rtti)
 set (XORRISO_FLAGS -as mkisofs -b limine-cd.bin -no-emul-boot -boot-load-size 4 -boot-info-table --efi-boot limine-cd-efi.bin --efi-boot-part --efi-boot-image --protective-msdos-label)
-set (QEMU_FLAGS -M q35,smm=off -net none -smp 4 -d int,guest_errors -d cpu_reset -m 128M -no-shutdown -no-reboot -debugcon file:debug.log -D ./qemu.log -device isa-debug-exit)
-list (APPEND QEMU_FLAGS -serial stdio)
+set (QEMU_FLAGS -M q35,smm=off -net none -smp 4 -d int,guest_errors -d cpu_reset -m 2G -no-shutdown -no-reboot -debugcon file:debug.log -D ./qemu.log -device isa-debug-exit)
+list (APPEND QEMU_FLAGS -monitor stdio -enable-kvm -cpu host)
 set (LINKER_FILE linker.${TARGET_ARCH}.ld)
 
 if (${TARGET_ARCH} STREQUAL x86_64)
@@ -37,10 +37,10 @@ file(MAKE_DIRECTORY ${ISO_ROOT})
 
 add_executable (${PROJECT_NAME} ${SOURCES})
 
-target_compile_options (${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CXX>: ${INTERNAL_CXX_FLAGS} ${CXX_WARNING_LEVELS} -fno-stack-protector -MMD -fno-pic -fno-pie -fno-lto -fno-stack-check -mno-red-zone -mno-sse -mno-sse2 -mno-mmx -mno-80387 -masm=intel>)
-target_link_options (${PROJECT_NAME} PUBLIC -nostdlib -no-pie -static -z max-page-size=0x1000 -s -T ${LINKER_FILE})
+target_compile_options (${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CXX>: ${INTERNAL_CXX_FLAGS} ${CXX_WARNING_LEVELS} -fno-stack-protector -MMD -fno-pic -fno-pie -fno-lto -fno-stack-check -mno-red-zone -mno-sse -mno-sse2 -mno-mmx -mno-80387>)
+target_link_options (${PROJECT_NAME} PUBLIC -g -nostdlib -no-pie -static -z max-page-size=0x1000 -s -T ${LINKER_FILE})
 
-target_include_directories (${PROJECT_NAME} PRIVATE Kernel limine)
+target_include_directories (${PROJECT_NAME} PRIVATE Kernel limine libstdcxx-headers/include)
 
 add_custom_target (setup 
     COMMAND make -C limine 
