@@ -1,7 +1,7 @@
 #include "Terminal.hpp"
 
 #include "BootInfo.hpp"
-#include "KLibC.hpp"
+#include "Utility/KLibC.hpp"
 
 extern unsigned char zap_vga09_psf[];
 
@@ -17,17 +17,20 @@ static constexpr const uint32_t PSF1_FONT_WIDTH  = 8;
 static constexpr const uint32_t PSF1_HEADER_SIZE = sizeof(PSF1Font);
 static constexpr const uint32_t PSF1_MODE512     = 0x01;
 
+static bool                     initialized      = false;
 static PSF1Font*                font             = (PSF1Font*)zap_vga09_psf;
 static Framebuffer*             framebuffer      = {};
 static uint32_t                 x                = 0;
 static uint32_t                 y                = 0;
 static uint32_t                 foregroundColor  = 0x00ffff;
-static uint32_t                 backgroundColor  = 0x000000;
+static uint32_t                 backgroundColor  = 0x383c3c;
 
 bool                            Terminal::Initialize()
 {
     framebuffer = BootInfo::GetFramebuffer();
-    return true;
+    initialized = true;
+
+    return initialized;
 }
 
 void Terminal::ClearScreen(uint32_t color)
@@ -41,6 +44,7 @@ void Terminal::ClearScreen(uint32_t color)
 }
 void Terminal::PutChar(uint32_t c)
 {
+    if (!initialized) return;
     const uint32_t glyphCount  = font->mode == PSF1_MODE512 ? 512 : 256;
     uint32_t charactersPerLine = framebuffer->width / (PSF1_FONT_WIDTH + 2);
     uint32_t charactersPerRow  = framebuffer->height / (font->charsize + 2);
@@ -117,8 +121,15 @@ void Terminal::ScrollDown(uint8_t lines)
     else y = 0;
 }
 
+void Terminal::SetColor(uint64_t color)
+{
+    SetForegroundColor(color >> 32);
+    SetBackgroundColor(color);
+}
 void Terminal::SetForegroundColor(uint32_t color) { foregroundColor = color; }
 void Terminal::SetBackgroundColor(uint32_t color) { backgroundColor = color; }
+
+uint64_t       Terminal::GetColor() { return (0x00d4b400383c3c); }
 uint32_t       Terminal::GetForegroundColor() { return foregroundColor; }
 uint32_t       Terminal::GetBackgroundColor() { return backgroundColor; }
 
