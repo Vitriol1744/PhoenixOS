@@ -10,26 +10,28 @@ extern "C" size_t strlen(const char* str)
     }
     return length;
 }
+
 extern "C" int strcmp(const char* lhs, const char* rhs)
 {
-    while (*lhs != '\0' && *lhs == *rhs)
+    while (*lhs != '\0')
     {
+        if (*lhs != *rhs) return (*lhs - *rhs);
         ++lhs;
         ++rhs;
     }
-    if (*lhs == *rhs) return 0;
-    return (*lhs - *rhs);
+    return 0;
 }
 extern "C" int strncmp(const char* lhs, const char* rhs, size_t bytes)
 {
-    while (*lhs != '\0' && *lhs == *rhs && bytes > 0)
+    while (*lhs != '\0' && bytes > 0)
     {
+        if (*lhs != *rhs) return (*lhs - *rhs);
+
         ++lhs;
         ++rhs;
         --bytes;
     }
-    if (*lhs == *rhs) return 0;
-    return (*lhs - *rhs);
+    return 0;
 }
 extern "C" void* memset(void* dest, char c, size_t bytes)
 {
@@ -51,5 +53,20 @@ extern "C" void* memcpy(void* dest, const void* src, size_t bytes)
         *d++ = *s++;
         --bytes;
     }
+    return dest;
+}
+extern "C" void* memmove(void* dest, const void* src, size_t bytes)
+{
+    uint8_t*       d = (uint8_t*)dest;
+    const uint8_t* s = (uint8_t*)src;
+
+    if (s > d)
+    {
+        for (size_t i = 0; i < bytes; ++i) d[i] = s[i];
+        return dest;
+    }
+
+    for (size_t i = bytes; i > 0; --i) d[i - 1] = s[i - 1];
+
     return dest;
 }

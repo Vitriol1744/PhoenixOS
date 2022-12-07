@@ -4,6 +4,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
+// TODO: Temporary
+#define DIV_ROUND_UP(x, y) ((x + (y - 1)) / y)
+#define ALIGN_UP(x, y)     (DIV_ROUND_UP(x, y) * y)
+#define ALIGN_DOWN(x, y)   ((x / y) * y)
+
 extern "C"
 {
     size_t strlen(const char* str);
@@ -11,6 +16,7 @@ extern "C"
     int    strncmp(const char* lhs, const char* rhs, size_t bytes);
     void*  memset(void* dest, char c, size_t bytes);
     void*  memcpy(void* dest, const void* src, size_t bytes);
+    void*  memmove(void* destination, const void* source, size_t count);
 }
 
 template <typename T>
