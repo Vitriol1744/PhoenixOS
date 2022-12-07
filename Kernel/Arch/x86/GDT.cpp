@@ -1,6 +1,11 @@
 #include "GDT.hpp"
 
-#include "KLibC.hpp"
+#include "Utility/KLibC.hpp"
+
+#include "Common.hpp"
+#include "Scheduler/Spinlock.hpp"
+
+#include <stddef.h>
 
 inline static constexpr const uint32_t GDT_ACCESS_CODE_READABLE    = BIT(1);
 inline static constexpr const uint32_t GDT_ACCESS_DATA_WRITABLE    = BIT(1);
@@ -17,6 +22,11 @@ inline static constexpr const uint32_t GDT_FLAG_64BIT_DESCRIPTOR = BIT(1);
 inline static constexpr const uint32_t GDT_FLAG_32BIT_DESCRIPTOR = BIT(2);
 inline static constexpr const uint32_t GDT_FLAG_GRANULARITY_4K   = BIT(3);
 
+inline static constexpr const uint32_t TSS_FLAG_PRESENT          = BIT(3);
+inline static constexpr const uint32_t TSS_FLAG_INACTIVE = BIT(3) | BIT(0);
+
+inline static constexpr const uint32_t TSS_SELECTOR      = 0x28;
+
 #pragma pack(push, 1)
 struct SegmentDescriptor
 {
@@ -28,16 +38,25 @@ struct SegmentDescriptor
     uint8_t  flags     : 4;
     uint8_t  baseHigh;
 };
-#pragma pack(pop)
-
-#pragma pack(push, 1)
-struct
+struct TaskStateSegmentDescriptor
 {
-    SegmentDescriptor null;
-    SegmentDescriptor kernelCode;
-    SegmentDescriptor kernelData;
-    SegmentDescriptor userCode;
-    SegmentDescriptor userData;
+    uint16_t length;
+    uint16_t baseLow;
+    uint8_t  baseMiddle1;
+    uint8_t  flags1;
+    uint8_t  flags2;
+    uint8_t  baseMiddle2;
+    uint32_t baseHigh;
+    uint32_t reserved;
+};
+struct GDTEntries
+{
+    SegmentDescriptor          null;
+    SegmentDescriptor          kernelCode;
+    SegmentDescriptor          kernelData;
+    SegmentDescriptor          userCode;
+    SegmentDescriptor          userData;
+    TaskStateSegmentDescriptor tss;
 } gdtEntries;
 #pragma pack(pop)
 
@@ -52,27 +71,46 @@ struct
         (_entry)->baseHigh = (_base >> 24) & 0xff;                             \
     }
 
+#define TSSWriteEntry(_entry, _base)                                           \
+    {                                                                          \
+        (_entry)->length      = sizeof(TaskStateSegment);                      \
+        (_entry)->baseLow     = (uint16_t)(_base & 0xffff);                    \
+        (_entry)->baseMiddle1 = (uint8_t)((_base >> 16) & 0xff);               \
+        (_entry)->flags1      = ((1 << 3) << 4) | (1 << 3 | 1 << 0);           \
+        (_entry)->flags2      = 0;                                             \
+        (_entry)->baseMiddle2 = (uint8_t)((_base >> 24) & 0xff);               \
+        (_entry)->baseHigh    = (uint32_t)(_base >> 32);                       \
+        (_entry)->reserved    = 0;                                             \
+    }
+
 namespace GDT
 {
-    void Initialize()
+    static Spinlock lock = {};
+
+    void            Initialize()
     {
         memset(&gdtEntries.null, 0, sizeof(SegmentDescriptor));
 
-        uint8_t kernelCodeAccess = GDT_ACCESS_CODE_READABLE
-                                 | GDT_ACCESS_CODE_SEGMENT
-                                 | GDT_ACCESS_CODE_OR_DATA;
-        uint8_t kernelDataAccess
-            = GDT_ACCESS_DATA_WRITABLE | GDT_ACCESS_CODE_OR_DATA;
         uint8_t userCodeAccess = GDT_ACCESS_CODE_READABLE
                                | GDT_ACCESS_CODE_SEGMENT
                                | GDT_ACCESS_CODE_OR_DATA | GDT_ACCESS_RING3;
         uint8_t userDataAccess
             = GDT_ACCESS_DATA_WRITABLE | GDT_ACCESS_CODE_READABLE;
-        GDTWriteEntry(&gdtEntries.kernelCode, 0, 0, kernelCodeAccess);
-        GDTWriteEntry(&gdtEntries.kernelData, 0, 0, kernelDataAccess);
+
+        GDTWriteEntry(&gdtEntries.kernelCode, 0, 0xffffffff,
+                      GDT_ACCESS_PRESENT | GDT_ACCESS_CODE_OR_DATA
+                          | GDT_ACCESS_CODE_SEGMENT | GDT_ACCESS_DATA_WRITABLE);
+
+        GDTWriteEntry(&gdtEntries.kernelData, 0, 0xffffffff,
+                      GDT_ACCESS_PRESENT | GDT_ACCESS_CODE_OR_DATA
+                          | GDT_ACCESS_CODE_READABLE);
         GDTWriteEntry(&gdtEntries.userCode, 0, 0, userCodeAccess);
         GDTWriteEntry(&gdtEntries.userData, 0, 0, userDataAccess);
+        TSSWriteEntry(&gdtEntries.tss, 0);
+
+        LogInfo("GDT Initialized!");
     }
+
     void Load()
     {
 #pragma pack(push, 1)
@@ -86,19 +124,33 @@ namespace GDT
         gdtr.base  = reinterpret_cast<uintptr_t>(&gdtEntries);
 
         __asm__ volatile(
-            "lgdt %1\n"
-            "push %0\n"
-            "lea rax, [.l1]\n"
-            "push rax\n"
-            "retfq\n"
-            ".l1:\n"
-            "mov ax, 0x10\n"
-            "mov ds, ax\n"
-            "mov es, ax\n"
-            "mov fs, ax\n"
-            "mov gs, ax\n"
-            "mov ss, ax\n"
+            "lgdt %0\n"
+            "mov %%rsp, %%rbx\n"
+            "push %1\n"
+            "push %%rbx\n"
+            "pushf\n"
+            "push %2\n"
+            "push $1f\n"
+            "iretq\n"
+            "1:\n"
+            "mov %1, %%ds\n"
+            "mov %1, %%es\n"
+            "mov %1, %%fs\n"
+            "mov %1, %%gs\n"
+            "mov %1, %%ss"
             :
-            : "r"(GDT_KERNEL_CODE_SELECTOR64), "m"(gdtr));
+            : "m"(gdtr), "r"(KERNEL_DATA_SELECTOR), "r"(KERNEL_CODE_SELECTOR)
+            : "rbx", "memory");
+    }
+
+    void LoadTSS(TaskStateSegment* tss)
+    {
+        lock.Lock();
+        Assert(tss != NULL);
+
+        TSSWriteEntry(&gdtEntries.tss, reinterpret_cast<uintptr_t>(tss));
+
+        __asm__ volatile("ltr %0" : : "rm"((uint16_t)TSS_SELECTOR) : "memory");
+        lock.Unlock();
     }
 } // namespace GDT
