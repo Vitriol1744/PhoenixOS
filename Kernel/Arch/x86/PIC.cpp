@@ -82,7 +82,7 @@ namespace PIC
         IO::Out<byte>(PIC2_DATA, 0x02);
         IO::Wait();
 
-        // ICW4:
+        // ICW4: Set x86 mode
         uint32_t icw4 = static_cast<uint32_t>(ICW4Flags::e8086Mode);
         IO::Out<byte>(PIC1_DATA, icw4);
         IO::Wait();
