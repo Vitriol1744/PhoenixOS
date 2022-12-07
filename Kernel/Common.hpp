@@ -4,7 +4,13 @@
 
 #include "Utility/Logger.hpp"
 
-#define BIT(n) (1 << n)
+#define BIT(n) (1ull << n)
+
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
+
+using symbol = void*[];
 
 struct StackFrame
 {
@@ -12,16 +18,22 @@ struct StackFrame
     uintptr_t   rip;
 };
 
+inline static void halt()
+{
+    while (true)
+        ;
+}
+
 inline static void stackTrace()
 {
     StackFrame* stackFrame;
 #if PH_ARCH == PH_ARCH_X86_64
-    __asm__ volatile("mov %0, rbp" : "=r"(stackFrame));
+    __asm__ volatile("mov %%rbp, %0" : "=r"(stackFrame));
 #elif PH_ARCH == PH_ARCH_IA32
     __asm__ volatile("mov %0, ebp" : "=r"(stackFrame));
 #endif
     LogFatal("Stack Trace: \n");
-    while (stackFrame != nullptr)
+    while (stackFrame != nullptr && stackFrame->rip != 0)
     {
         // TODO: Figure out a way to resolve function names
         LogFatal("%#p\n", stackFrame->rip);
@@ -41,5 +53,14 @@ inline static void panic(const char* msg, ...)
     LogFatal("\n");
 
     stackTrace();
-    __asm__ volatile("cli; hlt");
+    halt();
 }
+
+#define Assert(expr) AssertMsg(expr, #expr)
+#define AssertMsg(expr, msg)                                                   \
+    if (expr) {}                                                               \
+    else                                                                       \
+    {                                                                          \
+        panic("Assertion Failed: %s, In File: %s, At Line: %d", msg, __FILE__, \
+              __LINE__);                                                       \
+    }
