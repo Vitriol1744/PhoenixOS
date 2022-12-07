@@ -8,22 +8,22 @@ namespace IO
     inline static void Out(word port, T value) requires(sizeof(T) <= 4)
     {
         if constexpr (sizeof(T) == 1)
-            __asm__ volatile("out dx, al" : : "a"(value), "d"(port));
+            __asm__ volatile("outb %0, %1" : : "a"(value), "d"(port));
         else if constexpr (sizeof(T) == 2)
-            __asm__ volatile("out dx, ax" : : "a"(value), "d"(port));
+            __asm__ volatile("outw %0, %1" : : "a"(value), "d"(port));
         else if constexpr (sizeof(T) == 4)
-            __asm__ volatile("out dx, eax" : : "a"(value), "d"(port));
+            __asm__ volatile("outl %0, %1" : : "a"(value), "d"(port));
     }
     template <typename T>
     inline static T In(word port) requires(sizeof(T) <= 4)
     {
         T value = 0;
         if constexpr (sizeof(T) == 1)
-            __asm__ volatile("in al, dx" : "=a"(value) : "d"(port));
+            __asm__ volatile("inb %1, %0" : "=a"(value) : "d"(port));
         else if constexpr (sizeof(T) == 2)
-            __asm__ volatile("in ax, dx" : "=a"(value) : "d"(port));
+            __asm__ volatile("inw %1, %0" : "=a"(value) : "d"(port));
         else if constexpr (sizeof(T) == 4)
-            __asm__ volatile("in eax, dx" : "=a"(value) : "d"(port));
+            __asm__ volatile("inl %1, %0" : "=a"(value) : "d"(port));
 
         return value;
     }
