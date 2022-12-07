@@ -2,7 +2,7 @@
 
 #include "Common.hpp"
 
-#include "KLibC.hpp"
+#include "Utility/KLibC.hpp"
 
 struct Bitmap
 {
