@@ -60,15 +60,15 @@ struct GDTEntries
 } gdtEntries;
 #pragma pack(pop)
 
-#define GDTWriteEntry(_entry, _base, _limit, _access)                          \
+#define GDTWriteEntry(_entry, _base, _limit, _access, _flags)                  \
     {                                                                          \
         (_entry)->limitLow   = _limit & 0xffff;                                \
         (_entry)->baseLow    = _base & 0xffff;                                 \
         (_entry)->baseMiddle = (_base >> 16) & 0xff;                           \
         (_entry)->access     = _access | GDT_ACCESS_PRESENT;                   \
         (_entry)->limitHigh  = (_limit >> 16) & 0xf;                           \
-        (_entry)->flags = GDT_FLAG_64BIT_DESCRIPTOR | GDT_FLAG_GRANULARITY_4K; \
-        (_entry)->baseHigh = (_base >> 24) & 0xff;                             \
+        (_entry)->flags      = _flags;                                         \
+        (_entry)->baseHigh   = (_base >> 24) & 0xff;                           \
     }
 
 #define TSSWriteEntry(_entry, _base)                                           \
@@ -94,18 +94,18 @@ namespace GDT
         uint8_t userCodeAccess = GDT_ACCESS_CODE_READABLE
                                | GDT_ACCESS_CODE_SEGMENT
                                | GDT_ACCESS_CODE_OR_DATA | GDT_ACCESS_RING3;
-        uint8_t userDataAccess
-            = GDT_ACCESS_DATA_WRITABLE | GDT_ACCESS_CODE_READABLE;
+        uint8_t userDataAccess = GDT_ACCESS_DATA_WRITABLE
+                               | GDT_ACCESS_CODE_OR_DATA | GDT_ACCESS_RING3;
 
         GDTWriteEntry(&gdtEntries.kernelCode, 0, 0xffffffff,
-                      GDT_ACCESS_PRESENT | GDT_ACCESS_CODE_OR_DATA
-                          | GDT_ACCESS_CODE_SEGMENT | GDT_ACCESS_DATA_WRITABLE);
+                      GDT_ACCESS_CODE_OR_DATA | GDT_ACCESS_CODE_SEGMENT
+                          | GDT_ACCESS_CODE_READABLE,
+                      0xa);
 
         GDTWriteEntry(&gdtEntries.kernelData, 0, 0xffffffff,
-                      GDT_ACCESS_PRESENT | GDT_ACCESS_CODE_OR_DATA
-                          | GDT_ACCESS_CODE_READABLE);
-        GDTWriteEntry(&gdtEntries.userCode, 0, 0, userCodeAccess);
-        GDTWriteEntry(&gdtEntries.userData, 0, 0, userDataAccess);
+                      GDT_ACCESS_CODE_OR_DATA | GDT_ACCESS_DATA_WRITABLE, 0xa);
+        GDTWriteEntry(&gdtEntries.userCode, 0, 0, userCodeAccess, 0xa);
+        GDTWriteEntry(&gdtEntries.userData, 0, 0, userDataAccess, 0xa);
         TSSWriteEntry(&gdtEntries.tss, 0);
 
         LogInfo("GDT Initialized!");
