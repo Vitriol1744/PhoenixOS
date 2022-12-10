@@ -10,14 +10,14 @@ class Vector
 {
   public:
     Vector() = default;
-    Vector(size_t capacity)
+    explicit Vector(size_t capacity)
         : capacity(capacity)
     {
         Reserve(capacity);
     };
     ~Vector()
     {
-        if (data) delete[] data;
+        delete[] data;
     }
 
     void Reserve(size_t newcapacity)
@@ -43,7 +43,7 @@ class Vector
         {
             T* newdata = new T[capacity ? 2 * capacity : 1];
 
-            for (int i = 0; i < capacity; i++) { newdata[i] = data[i]; }
+            for (size_t i = 0; i < capacity; i++) { newdata[i] = data[i]; }
 
             if (size > 0) delete[] data;
             capacity = capacity ? 2 * capacity : 1;
@@ -55,12 +55,15 @@ class Vector
     }
     void PopFront()
     {
-        uint8_t* ptr = (uint8_t*)&data[0];
-        memmove(ptr, (uint8_t*)&data[1], (size - 1) * sizeof(T));
+        T* dest = &data[0];
+        memcpy(dest, &data[1], (size - 1) * sizeof(T));
 
         --size;
     }
-    T  PopBack() {}
+    void PopBack()
+    {
+        --size;
+    }
 
     T& operator[](size_t index)
     {
