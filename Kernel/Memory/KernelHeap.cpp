@@ -15,26 +15,10 @@ struct MemorySegment
     bool           free            = true;
 };
 
-void* operator new(size_t size)
-{
-    return PhysicalMemoryManager::AllocatePages(1);
-}
-void* operator new[](size_t size)
-{
-    return PhysicalMemoryManager::AllocatePages(1);
-}
-void operator delete(void* ptr) noexcept
-{
-    PhysicalMemoryManager::FreePages(ptr, 1);
-}
-void operator delete[](void* ptr) noexcept
-{
-    PhysicalMemoryManager::FreePages(ptr, 1);
-}
-// void* operator new(size_t size) { return KernelHeap::Allocate(size, 0); }
-// void* operator new[](size_t size) { return KernelHeap::Allocate(size, 0); }
-// void  operator delete(void* ptr) noexcept { KernelHeap::Free(ptr); }
-// void  operator delete[](void* ptr) noexcept { KernelHeap::Free(ptr); }
+void* operator new(size_t size) { return KernelHeap::Callocate(size, 0); }
+void* operator new[](size_t size) { return KernelHeap::Callocate(size, 0); }
+void  operator delete(void* ptr) noexcept { KernelHeap::Free(ptr); }
+void  operator delete[](void* ptr) noexcept { KernelHeap::Free(ptr); }
 
 static MemorySegment* firstSegment = nullptr;
 static Spinlock       lock         = {};
@@ -60,7 +44,7 @@ static void           DoPrintFreeSpace()
     #define PrintFreeSpace()
 #endif
 
-// This kernel heap is a little bit complicated because of implementing
+// This kernel heap is a bit complicated because of implementing
 // AlignedAlloc, but we will eventually rewrite all of it, it is just a
 // quick temporary solution just to be able to work on stuff requiring
 // dynamic allocation.
@@ -108,7 +92,7 @@ namespace KernelHeap
         currentSegment->free       = false;
         currentSegment->length     = bytes + toAlign;
 
-        MemorySegment* nextSegment = reinterpret_cast<MemorySegment*>(
+        auto nextSegment = reinterpret_cast<MemorySegment*>(
             reinterpret_cast<uint8_t*>(currentSegment + 1)
             + currentSegment->length);
         nextSegment->nextSegment = currentSegment->nextSegment;
@@ -133,15 +117,16 @@ namespace KernelHeap
     }
     void Free(void* memory)
     {
+        if (!memory) return;
         lock.Lock();
 
 #define InRange(val, start, end) (val >= start && val < end)
         MemorySegment* currentSegment = firstSegment;
         while (currentSegment)
         {
-            if (currentSegment->free == false)
+            if (!currentSegment->free)
             {
-                uint8_t* segmentStart
+                auto segmentStart
                     = reinterpret_cast<uint8_t*>(currentSegment + 1);
                 uint8_t* segmentEnd = segmentStart + currentSegment->length;
                 if (InRange(memory, segmentStart, segmentEnd))
