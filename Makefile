@@ -158,6 +158,54 @@ qemu/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/qemu.dir/build.make CMakeFiles/qemu.dir/build
 .PHONY : qemu/fast
 
+Kernel/ACPI.o: Kernel/ACPI.cpp.o
+.PHONY : Kernel/ACPI.o
+
+# target to build an object file
+Kernel/ACPI.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/ACPI.cpp.o
+.PHONY : Kernel/ACPI.cpp.o
+
+Kernel/ACPI.i: Kernel/ACPI.cpp.i
+.PHONY : Kernel/ACPI.i
+
+# target to preprocess a source file
+Kernel/ACPI.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/ACPI.cpp.i
+.PHONY : Kernel/ACPI.cpp.i
+
+Kernel/ACPI.s: Kernel/ACPI.cpp.s
+.PHONY : Kernel/ACPI.s
+
+# target to generate assembly for a file
+Kernel/ACPI.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/ACPI.cpp.s
+.PHONY : Kernel/ACPI.cpp.s
+
+Kernel/Arch/x86/APIC.o: Kernel/Arch/x86/APIC.cpp.o
+.PHONY : Kernel/Arch/x86/APIC.o
+
+# target to build an object file
+Kernel/Arch/x86/APIC.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/APIC.cpp.o
+.PHONY : Kernel/Arch/x86/APIC.cpp.o
+
+Kernel/Arch/x86/APIC.i: Kernel/Arch/x86/APIC.cpp.i
+.PHONY : Kernel/Arch/x86/APIC.i
+
+# target to preprocess a source file
+Kernel/Arch/x86/APIC.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/APIC.cpp.i
+.PHONY : Kernel/Arch/x86/APIC.cpp.i
+
+Kernel/Arch/x86/APIC.s: Kernel/Arch/x86/APIC.cpp.s
+.PHONY : Kernel/Arch/x86/APIC.s
+
+# target to generate assembly for a file
+Kernel/Arch/x86/APIC.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/APIC.cpp.s
+.PHONY : Kernel/Arch/x86/APIC.cpp.s
+
 Kernel/Arch/x86/Arch.o: Kernel/Arch/x86/Arch.cpp.o
 .PHONY : Kernel/Arch/x86/Arch.o
 
@@ -181,6 +229,102 @@ Kernel/Arch/x86/Arch.s: Kernel/Arch/x86/Arch.cpp.s
 Kernel/Arch/x86/Arch.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/Arch.cpp.s
 .PHONY : Kernel/Arch/x86/Arch.cpp.s
+
+Kernel/Arch/x86/CMOS.o: Kernel/Arch/x86/CMOS.cpp.o
+.PHONY : Kernel/Arch/x86/CMOS.o
+
+# target to build an object file
+Kernel/Arch/x86/CMOS.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/CMOS.cpp.o
+.PHONY : Kernel/Arch/x86/CMOS.cpp.o
+
+Kernel/Arch/x86/CMOS.i: Kernel/Arch/x86/CMOS.cpp.i
+.PHONY : Kernel/Arch/x86/CMOS.i
+
+# target to preprocess a source file
+Kernel/Arch/x86/CMOS.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/CMOS.cpp.i
+.PHONY : Kernel/Arch/x86/CMOS.cpp.i
+
+Kernel/Arch/x86/CMOS.s: Kernel/Arch/x86/CMOS.cpp.s
+.PHONY : Kernel/Arch/x86/CMOS.s
+
+# target to generate assembly for a file
+Kernel/Arch/x86/CMOS.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/CMOS.cpp.s
+.PHONY : Kernel/Arch/x86/CMOS.cpp.s
+
+Kernel/Arch/x86/CPU.o: Kernel/Arch/x86/CPU.cpp.o
+.PHONY : Kernel/Arch/x86/CPU.o
+
+# target to build an object file
+Kernel/Arch/x86/CPU.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/CPU.cpp.o
+.PHONY : Kernel/Arch/x86/CPU.cpp.o
+
+Kernel/Arch/x86/CPU.i: Kernel/Arch/x86/CPU.cpp.i
+.PHONY : Kernel/Arch/x86/CPU.i
+
+# target to preprocess a source file
+Kernel/Arch/x86/CPU.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/CPU.cpp.i
+.PHONY : Kernel/Arch/x86/CPU.cpp.i
+
+Kernel/Arch/x86/CPU.s: Kernel/Arch/x86/CPU.cpp.s
+.PHONY : Kernel/Arch/x86/CPU.s
+
+# target to generate assembly for a file
+Kernel/Arch/x86/CPU.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/CPU.cpp.s
+.PHONY : Kernel/Arch/x86/CPU.cpp.s
+
+Kernel/Arch/x86/GDT.o: Kernel/Arch/x86/GDT.cpp.o
+.PHONY : Kernel/Arch/x86/GDT.o
+
+# target to build an object file
+Kernel/Arch/x86/GDT.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/GDT.cpp.o
+.PHONY : Kernel/Arch/x86/GDT.cpp.o
+
+Kernel/Arch/x86/GDT.i: Kernel/Arch/x86/GDT.cpp.i
+.PHONY : Kernel/Arch/x86/GDT.i
+
+# target to preprocess a source file
+Kernel/Arch/x86/GDT.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/GDT.cpp.i
+.PHONY : Kernel/Arch/x86/GDT.cpp.i
+
+Kernel/Arch/x86/GDT.s: Kernel/Arch/x86/GDT.cpp.s
+.PHONY : Kernel/Arch/x86/GDT.s
+
+# target to generate assembly for a file
+Kernel/Arch/x86/GDT.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/GDT.cpp.s
+.PHONY : Kernel/Arch/x86/GDT.cpp.s
+
+Kernel/Arch/x86/HPET.o: Kernel/Arch/x86/HPET.cpp.o
+.PHONY : Kernel/Arch/x86/HPET.o
+
+# target to build an object file
+Kernel/Arch/x86/HPET.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/HPET.cpp.o
+.PHONY : Kernel/Arch/x86/HPET.cpp.o
+
+Kernel/Arch/x86/HPET.i: Kernel/Arch/x86/HPET.cpp.i
+.PHONY : Kernel/Arch/x86/HPET.i
+
+# target to preprocess a source file
+Kernel/Arch/x86/HPET.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/HPET.cpp.i
+.PHONY : Kernel/Arch/x86/HPET.cpp.i
+
+Kernel/Arch/x86/HPET.s: Kernel/Arch/x86/HPET.cpp.s
+.PHONY : Kernel/Arch/x86/HPET.s
+
+# target to generate assembly for a file
+Kernel/Arch/x86/HPET.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/HPET.cpp.s
+.PHONY : Kernel/Arch/x86/HPET.cpp.s
 
 Kernel/Arch/x86/IDT.o: Kernel/Arch/x86/IDT.cpp.o
 .PHONY : Kernel/Arch/x86/IDT.o
@@ -206,6 +350,30 @@ Kernel/Arch/x86/IDT.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/IDT.cpp.s
 .PHONY : Kernel/Arch/x86/IDT.cpp.s
 
+Kernel/Arch/x86/LAPIC.o: Kernel/Arch/x86/LAPIC.cpp.o
+.PHONY : Kernel/Arch/x86/LAPIC.o
+
+# target to build an object file
+Kernel/Arch/x86/LAPIC.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/LAPIC.cpp.o
+.PHONY : Kernel/Arch/x86/LAPIC.cpp.o
+
+Kernel/Arch/x86/LAPIC.i: Kernel/Arch/x86/LAPIC.cpp.i
+.PHONY : Kernel/Arch/x86/LAPIC.i
+
+# target to preprocess a source file
+Kernel/Arch/x86/LAPIC.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/LAPIC.cpp.i
+.PHONY : Kernel/Arch/x86/LAPIC.cpp.i
+
+Kernel/Arch/x86/LAPIC.s: Kernel/Arch/x86/LAPIC.cpp.s
+.PHONY : Kernel/Arch/x86/LAPIC.s
+
+# target to generate assembly for a file
+Kernel/Arch/x86/LAPIC.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/LAPIC.cpp.s
+.PHONY : Kernel/Arch/x86/LAPIC.cpp.s
+
 Kernel/Arch/x86/PIC.o: Kernel/Arch/x86/PIC.cpp.o
 .PHONY : Kernel/Arch/x86/PIC.o
 
@@ -229,6 +397,30 @@ Kernel/Arch/x86/PIC.s: Kernel/Arch/x86/PIC.cpp.s
 Kernel/Arch/x86/PIC.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/PIC.cpp.s
 .PHONY : Kernel/Arch/x86/PIC.cpp.s
+
+Kernel/Arch/x86/PIT.o: Kernel/Arch/x86/PIT.cpp.o
+.PHONY : Kernel/Arch/x86/PIT.o
+
+# target to build an object file
+Kernel/Arch/x86/PIT.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/PIT.cpp.o
+.PHONY : Kernel/Arch/x86/PIT.cpp.o
+
+Kernel/Arch/x86/PIT.i: Kernel/Arch/x86/PIT.cpp.i
+.PHONY : Kernel/Arch/x86/PIT.i
+
+# target to preprocess a source file
+Kernel/Arch/x86/PIT.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/PIT.cpp.i
+.PHONY : Kernel/Arch/x86/PIT.cpp.i
+
+Kernel/Arch/x86/PIT.s: Kernel/Arch/x86/PIT.cpp.s
+.PHONY : Kernel/Arch/x86/PIT.s
+
+# target to generate assembly for a file
+Kernel/Arch/x86/PIT.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Arch/x86/PIT.cpp.s
+.PHONY : Kernel/Arch/x86/PIT.cpp.s
 
 Kernel/Arch/x86/interrupts.x86_64.o: Kernel/Arch/x86/interrupts.x86_64.asm.o
 .PHONY : Kernel/Arch/x86/interrupts.x86_64.o
@@ -286,30 +478,6 @@ Kernel/Drivers/Terminal.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Drivers/Terminal.cpp.s
 .PHONY : Kernel/Drivers/Terminal.cpp.s
 
-Kernel/KLibC.o: Kernel/KLibC.cpp.o
-.PHONY : Kernel/KLibC.o
-
-# target to build an object file
-Kernel/KLibC.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/KLibC.cpp.o
-.PHONY : Kernel/KLibC.cpp.o
-
-Kernel/KLibC.i: Kernel/KLibC.cpp.i
-.PHONY : Kernel/KLibC.i
-
-# target to preprocess a source file
-Kernel/KLibC.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/KLibC.cpp.i
-.PHONY : Kernel/KLibC.cpp.i
-
-Kernel/KLibC.s: Kernel/KLibC.cpp.s
-.PHONY : Kernel/KLibC.s
-
-# target to generate assembly for a file
-Kernel/KLibC.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/KLibC.cpp.s
-.PHONY : Kernel/KLibC.cpp.s
-
 Kernel/KernelStart.o: Kernel/KernelStart.cpp.o
 .PHONY : Kernel/KernelStart.o
 
@@ -333,6 +501,142 @@ Kernel/KernelStart.s: Kernel/KernelStart.cpp.s
 Kernel/KernelStart.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/KernelStart.cpp.s
 .PHONY : Kernel/KernelStart.cpp.s
+
+Kernel/Memory/KernelHeap.o: Kernel/Memory/KernelHeap.cpp.o
+.PHONY : Kernel/Memory/KernelHeap.o
+
+# target to build an object file
+Kernel/Memory/KernelHeap.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Memory/KernelHeap.cpp.o
+.PHONY : Kernel/Memory/KernelHeap.cpp.o
+
+Kernel/Memory/KernelHeap.i: Kernel/Memory/KernelHeap.cpp.i
+.PHONY : Kernel/Memory/KernelHeap.i
+
+# target to preprocess a source file
+Kernel/Memory/KernelHeap.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Memory/KernelHeap.cpp.i
+.PHONY : Kernel/Memory/KernelHeap.cpp.i
+
+Kernel/Memory/KernelHeap.s: Kernel/Memory/KernelHeap.cpp.s
+.PHONY : Kernel/Memory/KernelHeap.s
+
+# target to generate assembly for a file
+Kernel/Memory/KernelHeap.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Memory/KernelHeap.cpp.s
+.PHONY : Kernel/Memory/KernelHeap.cpp.s
+
+Kernel/Memory/PhysicalMemoryManager.o: Kernel/Memory/PhysicalMemoryManager.cpp.o
+.PHONY : Kernel/Memory/PhysicalMemoryManager.o
+
+# target to build an object file
+Kernel/Memory/PhysicalMemoryManager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Memory/PhysicalMemoryManager.cpp.o
+.PHONY : Kernel/Memory/PhysicalMemoryManager.cpp.o
+
+Kernel/Memory/PhysicalMemoryManager.i: Kernel/Memory/PhysicalMemoryManager.cpp.i
+.PHONY : Kernel/Memory/PhysicalMemoryManager.i
+
+# target to preprocess a source file
+Kernel/Memory/PhysicalMemoryManager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Memory/PhysicalMemoryManager.cpp.i
+.PHONY : Kernel/Memory/PhysicalMemoryManager.cpp.i
+
+Kernel/Memory/PhysicalMemoryManager.s: Kernel/Memory/PhysicalMemoryManager.cpp.s
+.PHONY : Kernel/Memory/PhysicalMemoryManager.s
+
+# target to generate assembly for a file
+Kernel/Memory/PhysicalMemoryManager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Memory/PhysicalMemoryManager.cpp.s
+.PHONY : Kernel/Memory/PhysicalMemoryManager.cpp.s
+
+Kernel/Memory/VirtualMemoryManager.o: Kernel/Memory/VirtualMemoryManager.cpp.o
+.PHONY : Kernel/Memory/VirtualMemoryManager.o
+
+# target to build an object file
+Kernel/Memory/VirtualMemoryManager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Memory/VirtualMemoryManager.cpp.o
+.PHONY : Kernel/Memory/VirtualMemoryManager.cpp.o
+
+Kernel/Memory/VirtualMemoryManager.i: Kernel/Memory/VirtualMemoryManager.cpp.i
+.PHONY : Kernel/Memory/VirtualMemoryManager.i
+
+# target to preprocess a source file
+Kernel/Memory/VirtualMemoryManager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Memory/VirtualMemoryManager.cpp.i
+.PHONY : Kernel/Memory/VirtualMemoryManager.cpp.i
+
+Kernel/Memory/VirtualMemoryManager.s: Kernel/Memory/VirtualMemoryManager.cpp.s
+.PHONY : Kernel/Memory/VirtualMemoryManager.s
+
+# target to generate assembly for a file
+Kernel/Memory/VirtualMemoryManager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Memory/VirtualMemoryManager.cpp.s
+.PHONY : Kernel/Memory/VirtualMemoryManager.cpp.s
+
+Kernel/Scheduler/Scheduler.o: Kernel/Scheduler/Scheduler.cpp.o
+.PHONY : Kernel/Scheduler/Scheduler.o
+
+# target to build an object file
+Kernel/Scheduler/Scheduler.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Scheduler/Scheduler.cpp.o
+.PHONY : Kernel/Scheduler/Scheduler.cpp.o
+
+Kernel/Scheduler/Scheduler.i: Kernel/Scheduler/Scheduler.cpp.i
+.PHONY : Kernel/Scheduler/Scheduler.i
+
+# target to preprocess a source file
+Kernel/Scheduler/Scheduler.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Scheduler/Scheduler.cpp.i
+.PHONY : Kernel/Scheduler/Scheduler.cpp.i
+
+Kernel/Scheduler/Scheduler.s: Kernel/Scheduler/Scheduler.cpp.s
+.PHONY : Kernel/Scheduler/Scheduler.s
+
+# target to generate assembly for a file
+Kernel/Scheduler/Scheduler.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Scheduler/Scheduler.cpp.s
+.PHONY : Kernel/Scheduler/Scheduler.cpp.s
+
+Kernel/Scheduler/scheduler.x86_64.o: Kernel/Scheduler/scheduler.x86_64.asm.o
+.PHONY : Kernel/Scheduler/scheduler.x86_64.o
+
+# target to build an object file
+Kernel/Scheduler/scheduler.x86_64.asm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Scheduler/scheduler.x86_64.asm.o
+.PHONY : Kernel/Scheduler/scheduler.x86_64.asm.o
+
+Kernel/Scheduler/userland.x86_64.o: Kernel/Scheduler/userland.x86_64.asm.o
+.PHONY : Kernel/Scheduler/userland.x86_64.o
+
+# target to build an object file
+Kernel/Scheduler/userland.x86_64.asm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Scheduler/userland.x86_64.asm.o
+.PHONY : Kernel/Scheduler/userland.x86_64.asm.o
+
+Kernel/Utility/KLibC.o: Kernel/Utility/KLibC.cpp.o
+.PHONY : Kernel/Utility/KLibC.o
+
+# target to build an object file
+Kernel/Utility/KLibC.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Utility/KLibC.cpp.o
+.PHONY : Kernel/Utility/KLibC.cpp.o
+
+Kernel/Utility/KLibC.i: Kernel/Utility/KLibC.cpp.i
+.PHONY : Kernel/Utility/KLibC.i
+
+# target to preprocess a source file
+Kernel/Utility/KLibC.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Utility/KLibC.cpp.i
+.PHONY : Kernel/Utility/KLibC.cpp.i
+
+Kernel/Utility/KLibC.s: Kernel/Utility/KLibC.cpp.s
+.PHONY : Kernel/Utility/KLibC.s
+
+# target to generate assembly for a file
+Kernel/Utility/KLibC.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Utility/KLibC.cpp.s
+.PHONY : Kernel/Utility/KLibC.cpp.s
 
 Kernel/Utility/Logger.o: Kernel/Utility/Logger.cpp.o
 .PHONY : Kernel/Utility/Logger.o
@@ -358,6 +662,30 @@ Kernel/Utility/Logger.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/Utility/Logger.cpp.s
 .PHONY : Kernel/Utility/Logger.cpp.s
 
+Kernel/kernelStart.o: Kernel/kernelStart.cpp.o
+.PHONY : Kernel/kernelStart.o
+
+# target to build an object file
+Kernel/kernelStart.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/kernelStart.cpp.o
+.PHONY : Kernel/kernelStart.cpp.o
+
+Kernel/kernelStart.i: Kernel/kernelStart.cpp.i
+.PHONY : Kernel/kernelStart.i
+
+# target to preprocess a source file
+Kernel/kernelStart.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/kernelStart.cpp.i
+.PHONY : Kernel/kernelStart.cpp.i
+
+Kernel/kernelStart.s: Kernel/kernelStart.cpp.s
+.PHONY : Kernel/kernelStart.s
+
+# target to generate assembly for a file
+Kernel/kernelStart.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhoenixOS.dir/build.make CMakeFiles/PhoenixOS.dir/Kernel/kernelStart.cpp.s
+.PHONY : Kernel/kernelStart.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -369,15 +697,39 @@ help:
 	@echo "... qemu"
 	@echo "... setup"
 	@echo "... PhoenixOS"
+	@echo "... Kernel/ACPI.o"
+	@echo "... Kernel/ACPI.i"
+	@echo "... Kernel/ACPI.s"
+	@echo "... Kernel/Arch/x86/APIC.o"
+	@echo "... Kernel/Arch/x86/APIC.i"
+	@echo "... Kernel/Arch/x86/APIC.s"
 	@echo "... Kernel/Arch/x86/Arch.o"
 	@echo "... Kernel/Arch/x86/Arch.i"
 	@echo "... Kernel/Arch/x86/Arch.s"
+	@echo "... Kernel/Arch/x86/CMOS.o"
+	@echo "... Kernel/Arch/x86/CMOS.i"
+	@echo "... Kernel/Arch/x86/CMOS.s"
+	@echo "... Kernel/Arch/x86/CPU.o"
+	@echo "... Kernel/Arch/x86/CPU.i"
+	@echo "... Kernel/Arch/x86/CPU.s"
+	@echo "... Kernel/Arch/x86/GDT.o"
+	@echo "... Kernel/Arch/x86/GDT.i"
+	@echo "... Kernel/Arch/x86/GDT.s"
+	@echo "... Kernel/Arch/x86/HPET.o"
+	@echo "... Kernel/Arch/x86/HPET.i"
+	@echo "... Kernel/Arch/x86/HPET.s"
 	@echo "... Kernel/Arch/x86/IDT.o"
 	@echo "... Kernel/Arch/x86/IDT.i"
 	@echo "... Kernel/Arch/x86/IDT.s"
+	@echo "... Kernel/Arch/x86/LAPIC.o"
+	@echo "... Kernel/Arch/x86/LAPIC.i"
+	@echo "... Kernel/Arch/x86/LAPIC.s"
 	@echo "... Kernel/Arch/x86/PIC.o"
 	@echo "... Kernel/Arch/x86/PIC.i"
 	@echo "... Kernel/Arch/x86/PIC.s"
+	@echo "... Kernel/Arch/x86/PIT.o"
+	@echo "... Kernel/Arch/x86/PIT.i"
+	@echo "... Kernel/Arch/x86/PIT.s"
 	@echo "... Kernel/Arch/x86/interrupts.x86_64.o"
 	@echo "... Kernel/BootInfo.o"
 	@echo "... Kernel/BootInfo.i"
@@ -385,15 +737,32 @@ help:
 	@echo "... Kernel/Drivers/Terminal.o"
 	@echo "... Kernel/Drivers/Terminal.i"
 	@echo "... Kernel/Drivers/Terminal.s"
-	@echo "... Kernel/KLibC.o"
-	@echo "... Kernel/KLibC.i"
-	@echo "... Kernel/KLibC.s"
 	@echo "... Kernel/KernelStart.o"
 	@echo "... Kernel/KernelStart.i"
 	@echo "... Kernel/KernelStart.s"
+	@echo "... Kernel/Memory/KernelHeap.o"
+	@echo "... Kernel/Memory/KernelHeap.i"
+	@echo "... Kernel/Memory/KernelHeap.s"
+	@echo "... Kernel/Memory/PhysicalMemoryManager.o"
+	@echo "... Kernel/Memory/PhysicalMemoryManager.i"
+	@echo "... Kernel/Memory/PhysicalMemoryManager.s"
+	@echo "... Kernel/Memory/VirtualMemoryManager.o"
+	@echo "... Kernel/Memory/VirtualMemoryManager.i"
+	@echo "... Kernel/Memory/VirtualMemoryManager.s"
+	@echo "... Kernel/Scheduler/Scheduler.o"
+	@echo "... Kernel/Scheduler/Scheduler.i"
+	@echo "... Kernel/Scheduler/Scheduler.s"
+	@echo "... Kernel/Scheduler/scheduler.x86_64.o"
+	@echo "... Kernel/Scheduler/userland.x86_64.o"
+	@echo "... Kernel/Utility/KLibC.o"
+	@echo "... Kernel/Utility/KLibC.i"
+	@echo "... Kernel/Utility/KLibC.s"
 	@echo "... Kernel/Utility/Logger.o"
 	@echo "... Kernel/Utility/Logger.i"
 	@echo "... Kernel/Utility/Logger.s"
+	@echo "... Kernel/kernelStart.o"
+	@echo "... Kernel/kernelStart.i"
+	@echo "... Kernel/kernelStart.s"
 .PHONY : help
 
 

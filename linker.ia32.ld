@@ -1,8 +1,6 @@
 OUTPUT_FORMAT(elf32-i386)
 OUTPUT_ARCH(i386)
  
-ENTRY(kernelStart)
- 
 PHDRS
 {
     text    PT_LOAD    FLAGS((1 << 0) | (1 << 2)); /* Execute + Read */

@@ -1,9 +1,14 @@
+/*
+ * Created by vitriol1744 on 07.12.2022.
+ * Copyright (c) 2022-2022, Szymon Zemke <Vitriol1744@gmail.com>
+ *
+ * SPDX-License-Identifier: GPL-3
+ */
 #include "LAPIC.hpp"
 
 #include "Arch/x86/CPU.hpp"
 #include "Arch/x86/HPET.hpp"
 #include "Arch/x86/IDT.hpp"
-#include "Arch/x86/IO.hpp"
 #include "Arch/x86/PIC.hpp"
 #include "Arch/x86/PIT.hpp"
 

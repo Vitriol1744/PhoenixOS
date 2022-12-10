@@ -30,3 +30,5 @@ CMakeFiles/
 .ninja_log
 
 *.ninja
+
+.idea/

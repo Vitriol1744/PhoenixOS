@@ -1,10 +1,14 @@
+/*
+ * Created by vitriol1744 on 22.11.2022.
+ * Copyright (c) 2022-2022, Szymon Zemke <Vitriol1744@gmail.com>
+ *
+ * SPDX-License-Identifier: GPL-3
+ */
 #include "BootInfo.hpp"
 
 #include "Common.hpp"
 
 #include "limine.h"
-
-#include <stdatomic.h>
 
 static constexpr const uint32_t                DEFAULT_STACK_SIZE    = 65536;
 

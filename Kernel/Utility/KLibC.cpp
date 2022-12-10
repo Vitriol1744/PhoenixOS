@@ -1,3 +1,9 @@
+/*
+ * Created by vitriol1744 on 22.11.2022.
+ * Copyright (c) 2022-2022, Szymon Zemke <Vitriol1744@gmail.com>
+ *
+ * SPDX-License-Identifier: GPL-3
+ */
 #include "KLibC.hpp"
 
 extern "C" size_t strlen(const char* str)

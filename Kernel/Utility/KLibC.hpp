@@ -1,13 +1,14 @@
+/*
+ * Created by vitriol1744 on 22.11.2022.
+ * Copyright (c) 2022-2022, Szymon Zemke <Vitriol1744@gmail.com>
+ *
+ * SPDX-License-Identifier: GPL-3
+ */
 #pragma once
 
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
-
-// TODO: Temporary
-#define DIV_ROUND_UP(x, y) ((x + (y - 1)) / y)
-#define ALIGN_UP(x, y)     (DIV_ROUND_UP(x, y) * y)
-#define ALIGN_DOWN(x, y)   ((x / y) * y)
 
 extern "C"
 {

@@ -1,3 +1,9 @@
+/*
+ * Created by vitriol1744 on 07.12.2022.
+ * Copyright (c) 2022-2022, Szymon Zemke <Vitriol1744@gmail.com>
+ *
+ * SPDX-License-Identifier: GPL-3
+ */
 #pragma once
 
 inline static constexpr const uint32_t CPUID_FUNCTION_GET_FEATURE = 0x01;
