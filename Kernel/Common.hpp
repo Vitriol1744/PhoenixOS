@@ -18,11 +18,14 @@ struct StackFrame
     uintptr_t   rip;
 };
 
-inline static void halt()
+using InterruptHandler = void (*)(class CPUContext*);
+namespace IDT
 {
-    while (true)
-        ;
+    void RegisterInterruptHandler(uint32_t vector, InterruptHandler handler,
+                                  uint8_t dpl);
 }
+
+inline static void halt(class CPUContext*) { __asm__ volatile("cli; hlt"); }
 
 inline static void stackTrace()
 {
@@ -41,9 +44,13 @@ inline static void stackTrace()
     }
 }
 
-inline static void panic(const char* msg, ...)
+#define ENABLE_CLEAR_SCREEN_ON_PANIC false
+[[noreturn]] inline static void panic(const char* msg, ...)
 {
+    // TODO: Stop all cpus
+#if ENABLE_CLEAR_SCREEN_ON_PANIC != false
     Terminal::ClearScreen(0x0000ff);
+#endif
     LogFatal("Kernel Panic!\n");
 
     va_list args;
@@ -53,7 +60,8 @@ inline static void panic(const char* msg, ...)
     LogFatal("\n");
 
     stackTrace();
-    halt();
+    IDT::RegisterInterruptHandler(0x20, halt, 0);
+    __asm__ volatile("cli; hlt");
 }
 
 #define Assert(expr) AssertMsg(expr, #expr)
@@ -64,3 +72,4 @@ inline static void panic(const char* msg, ...)
         panic("Assertion Failed: %s, In File: %s, At Line: %d", msg, __FILE__, \
               __LINE__);                                                       \
     }
+#define NotImplemented() AssertMsg(false, "Function is not implemented!")
