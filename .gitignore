@@ -18,3 +18,7 @@ cmake_install.cmake
 CMakeFiles/3.25.0/
 
 CMakeFiles/
+
+.cmake/api/v1/query/
+
+.cmake/api/v1/reply/
