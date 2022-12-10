@@ -22,3 +22,11 @@ CMakeFiles/
 .cmake/api/v1/query/
 
 .cmake/api/v1/reply/
+
+*.xml
+
+.ninja_deps
+
+.ninja_log
+
+*.ninja
