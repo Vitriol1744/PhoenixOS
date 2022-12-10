@@ -1,37 +1,116 @@
-#include "Arch/Arch.hpp"
+#include "ACPI.hpp"
+#include "Common.hpp"
 
-#include "Drivers/Terminal.hpp"
+#include "Arch/x86/HPET.hpp"
+#include "Arch/x86/IDT.hpp"
+#include "Arch/x86/PIC.hpp"
+#include "Arch/x86/IO.hpp"
+
+#include "Scheduler/Scheduler.hpp"
+
 #include "Memory/PhysicalMemoryManager.hpp"
 
-#include "Utility/Logger.hpp"
+[[noreturn]] static void thread1();
+[[noreturn]] static void thread2();
 
-#include <stddef.h>
-#include <stdint.h>
-
-static void halt(void)
+extern "C" [[maybe_unused]] [[noreturn]] void                       user_function()
 {
-    for (;;) __asm__ volatile("hlt");
+    LogInfo("UserMode");
+    const char* str = "Hello, World!";
+    while (true) __asm__ volatile("mov %0, %%rdi; int $0x80" : : "r"(str));
 }
 
-extern "C" void kernelStart()
+using ConstructorFunction = void (*)();
+
+extern ConstructorFunction __init_array_start[];
+extern ConstructorFunction __init_array_end[];
+
+#define QemuExit() IO::Out<byte>(0x501, 0x31)
+
+void syscall(CPUContext* context)
 {
-    if (!BootInfo::Initialize()) halt();
-    Logger::EnableE9Logging();
-    Terminal::Initialize();
-    Logger::EnableTerminalLogging();
-    LogTrace("\nBooting PhoenixOS...\n");
+    LogError((const char*)context->rdi);
+}
+
+extern "C" __attribute__((noreturn)) void kernelStart()
+{
+    // Terminal::ClearScreen(0x383c3c);
+
+    LogTrace("Booting PhoenixOS...\n");
+
     LogInfo("Bootloader: %s, Version: %s\n", BootInfo::GetBootloaderName(),
             BootInfo::GetBootloaderVersion());
-    LogInfo("Kernel Physical Address: %#p\nKernel Virtual Address: %#p\n",
+    LogInfo("HHDM Offset: %llx\n", BootInfo::GetHHDMOffset());
+    LogInfo("Kernel Physical Address: %#p\nKernel Virtual Address: %#p\n ",
             BootInfo::GetKernelPhysicalAddress(),
             BootInfo::GetKernelVirtualAddress());
     LogInfo("Kernel Boot Time: %d\n", BootInfo::GetBootTime());
 
-    // Arch::Initialize();
+    GDT::Initialize();
+    GDT::Load();
+    PIC::Remap(0x20, 0x28);
+
+    IDT::Initialize();
+    IDT::Load();
+
     PhysicalMemoryManager::Initialize();
 
-    //__asm__ volatile("sti;");
-    // LogTrace("\nHello, %#-04lliWaaorld!", 15);
+    for (ConstructorFunction* entry = __init_array_start;
+         entry < __init_array_end; entry++)
+    {
+        ConstructorFunction constructor = *entry;
+        constructor();
+    }
+    VirtualMemoryManager::Initialize();
 
-    halt();
+    ACPI::Initialize();
+    HPET::Initialize();
+
+    LogInfo("\n ____  _                      _       ___  ____  \n");
+    LogInfo("|  _ \\| |__   ___   ___ _ __ (_)_  __/ _ \\/ ___| \n");
+    LogInfo("| |_) | '_ \\ / _ \\ / _ \\ '_ \\| \\ \\/ / | |\\___ \\ \n");
+    LogInfo("|  __/| | | | (_) |  __/ | | | |>  <| |_| |___)|\n");
+    LogInfo("|_|   |_| |_|\\___/ \\___|_| |_|_/_/\\_\\___/|____/ \n");
+
+    CPU::InitializeBSP();
+    CPU::StartUpAPs();
+
+    IDT::RegisterInterruptHandler(0x80, syscall, DPL_RING3);
+
+    Scheduler::Initialize();
+
+    Scheduler::CreateThread(Scheduler::GetKernelProcess(), (uintptr_t)thread1,
+                            KERNEL_CODE_SELECTOR);
+
+    auto p
+        = Scheduler::CreateProcess(VirtualMemoryManager::GetKernelPageMap());
+    uint16_t cs = 0x18 | 3;
+    Scheduler::CreateThread(p, (uintptr_t)thread2, cs);
+
+    Scheduler::Yield();
+
+    QemuExit();
+}
+
+#if 0
+    #define LogError(...)
+    #define LogWarn(...)
+#endif
+
+[[noreturn]] static void thread1()
+{
+    while (true)
+    {
+        LogWarn("DONE");
+    }
+}
+[[noreturn]] static void thread2()
+{
+    const char* str = "Hello, World!";
+    __asm__ volatile("mov %0, %%rdi; int $0x80" : : "r"(str));
+
+    while (true)
+    {
+        __asm__ volatile("mov %0, %%rdi; int $0x80" : : "r"(str));
+    }
 }
