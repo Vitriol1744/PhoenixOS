@@ -5,6 +5,8 @@
 #include "Memory/KernelHeap.hpp"
 #include "Utility/Bitmap.hpp"
 
+#include "Scheduler/Spinlock.hpp"
+
 inline static constexpr const uint32_t PAGE_SIZE = 0x1000;
 
 namespace PhysicalMemoryManager
@@ -13,6 +15,7 @@ namespace PhysicalMemoryManager
     static uintptr_t memoryTop   = 0;
     static size_t    totalMemory = 0;
     static size_t    freeMemory  = 0;
+    static Spinlock  lock        = {};
 
     bool             Initialize()
     {
@@ -20,11 +23,11 @@ namespace PhysicalMemoryManager
         MemoryMap memoryMap  = BootInfo::GetMemoryMap(entryCount);
         for (uint32_t i = 0; i < entryCount; i++)
         {
-            LogTrace(
-                "MemoryMapEntry[%02d]: Base: %#010p, Length: %#010lx, Type: "
-                "%ld\n",
-                i, memoryMap[i]->base, memoryMap[i]->length,
-                memoryMap[i]->type);
+            //LogTrace(
+              //  "MemoryMapEntry[%02d]: Base: %#010p, Length: %#010lx, Type: "
+                //"%ld\n",
+                //i, memoryMap[i]->base, memoryMap[i]->length,
+                //memoryMap[i]->type);
 
             switch (memoryMap[i]->type)
             {
@@ -39,6 +42,7 @@ namespace PhysicalMemoryManager
                 default: break;
             }
         }
+	LogInfo("Memory Map entries count: %lld, Total Memory: %lld, Free Memory: %lld", entryCount, totalMemory, freeMemory);
 
         uint32_t bitmapSize = memoryTop / PAGE_SIZE / 8;
         bitmapSize += 4096 - bitmapSize % 4096;
@@ -89,8 +93,7 @@ namespace PhysicalMemoryManager
     }
     void* AllocatePages(size_t count)
     {
-        static uint32_t all = 0;
-        all++;
+        lock.Lock();
         static uint64_t lastIndex = 0;
         if (count == 0) return nullptr;
 
@@ -100,10 +103,11 @@ namespace PhysicalMemoryManager
         {
             lastIndex = 0;
             ret       = FindFreeRegion(lastIndex, count, i);
-            if (!ret) panic("Out of memory!, %d", all);
+            if (!ret) panic("Out of memory!");
         }
 
         freeMemory -= count * PAGE_SIZE;
+        lock.Unlock();
         return ret;
     }
     void* CallocatePages(size_t count)
@@ -117,9 +121,11 @@ namespace PhysicalMemoryManager
     {
         if (count == 0) return;
         uintptr_t page = reinterpret_cast<uintptr_t>(ptr) / PAGE_SIZE;
+        lock.Lock();
         for (uintptr_t i = page; i < page + count; i++)
             bitmap.SetIndex(i, false);
         freeMemory += count * PAGE_SIZE;
+        lock.Unlock();
     }
 
     uint32_t GetPageSize() { return PAGE_SIZE; }
