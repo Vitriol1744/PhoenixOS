@@ -107,7 +107,20 @@ void Terminal::PutChar(uint32_t c)
             ScrollDown(n);
         }
     }
+
     // TODO:UpdateCursor(font_->width, font_->height);
+}
+void Terminal::PrintString(const char* string, size_t length)
+{
+    while (length > 0)
+    {
+        PutChar(*string++);
+        --length;
+    }
+}
+void Terminal::PrintString(const char* string)
+{
+    while (*string != '\0') PutChar(*string++);
 }
 
 void Terminal::ScrollDown(uint8_t lines)
