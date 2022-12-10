@@ -1,132 +1,175 @@
 #include "IDT.hpp"
 
-#include "Arch/x86/GDT.hpp"
-
 #include "Common.hpp"
 
+#include "Arch/x86/CPU.hpp"
+#include "Arch/x86/GDT.hpp"
+#include "Arch/x86/LAPIC.hpp"
+
+#include <stdint.h>
 #include <stdnoreturn.h>
 
-#pragma pack(push, 1)
-struct IDTR
+extern const char* exceptionNames[];
+
+static void        raiseException(CPUContext* cpuContext)
 {
-    uint16_t  limit;
-    uintptr_t base;
+    panic("Captured exception on cpu %d: '%s'\nError Code: %#b\nrip: %#p",
+          (uint32_t)CPU::GetCurrentID(),
+          exceptionNames[cpuContext->interruptVector], cpuContext->errorCode,
+          cpuContext->rip);
+}
+
+inline constexpr const uint32_t MAX_IDT_ENTRIES   = 256;
+
+inline constexpr const uint32_t IDT_ENTRY_PRESENT = BIT(7);
+
+#pragma pack(push, 1)
+struct IDTEntry
+{
+    uint16_t isrLow;
+    uint16_t kernelCS;
+#if PH_ARCH == PH_ARCH_X86_64
+    uint8_t ist;
+#elif PH_ARCH == PH_ARCH_IA32
+    uint8_t  reserved;
+#endif
+    union
+    {
+        uint8_t attributes;
+        struct
+        {
+            uint8_t gateType : 4;
+            uint8_t unused   : 1;
+            uint8_t dpl      : 2;
+            uint8_t present  : 1;
+        };
+    };
+#if PH_ARCH == PH_ARCH_X86_64
+    uint16_t isrMiddle;
+    uint32_t isrHigh;
+    uint32_t reserved;
+#elif PH_ARCH == PH_ARCH_IA32
+    uint16_t isrHigh;
+#endif
 };
 #pragma pack(pop)
 
-alignas(0x10) IDTEntry entries[MAX_IDT_ENTRIES];
+inline constexpr const uint32_t GATE_TYPE_INTERRUPT = 0xe;
+inline constexpr const uint32_t GATE_TYPE_TRAP      = 0xf;
 
-#pragma region exception_names
-const char*    exceptionNames[] = {
-       "Divide-by-zero",
-       "Debug",
-       "Non-Maskable Interrupt",
-       "Breakpoint",
-       "Overflow",
-       "Bound Range Exceeded",
-       "Invalid Opcode",
-       "Device not available",
-       "Double Fault",
-       "Coprocessor Segment Overrun",
-       "Invalid TSS",
-       "Segment Not Present",
-       "Stack-Segment Fault",
-       "General Protection Fault",
-       "Page Fault",
-       "Reserved",
-       "x87 Floating-Point Exception",
-       "Alignment Check",
-       "Machine Check",
-       "SIMD Floating-Point Exception",
-       "Virtualization Exception",
-       "Control Protection Exception",
-       "Reserved",
-       "Reserved",
-       "Reserved",
-       "Reserved",
-       "Reserved",
-       "Reserved",
-       "Hypervisor Injection Exception",
-       "VMM Communication Exception",
-       "Security Exception",
-       "Reserved",
-       "Triple Fault",
-       "FPU Error Interrupt",
-};
-#pragma endregion
+alignas(0x10) static IDTEntry idtEntries[256]       = {0};
+static InterruptHandler interruptHandlers[256]      = {0};
 
-using ExceptionHandler = void (*)();
-extern "C" ExceptionHandler exception_handlers[32];
+extern "C" void*        interrupt_handlers[];
 
-extern "C" void raiseException(uint32_t exceptionVector, uint32_t errorCode,
-                               uintptr_t rip)
+static void             idtWriteEntry(uint16_t vector, uintptr_t handler,
+                                      uint8_t attributes)
 {
-    panic("Captured exception: '%s'\nError Code: %d\nrip: %#p",
-          exceptionNames[exceptionVector], errorCode, rip);
-}
-struct InterruptFrame;
-__attribute__((interrupt)) void unhandledInterrupt(InterruptFrame*);
+    Assert(vector <= 256);
 
-void                            IDT::Initialize()
-{
-    for (uint32_t vector = 0; vector < 32; vector++)
-        RegisterInterruptHandler(
-            vector, reinterpret_cast<uintptr_t>(exception_handlers[vector]),
-            0x8e);
-    for (uint32_t vector = 32; vector < MAX_IDT_ENTRIES; vector++)
-        RegisterInterruptHandler(
-            vector, reinterpret_cast<uintptr_t>(unhandledInterrupt), 0x8e);
+    IDTEntry* entry   = idtEntries + vector;
+
+    entry->isrLow     = handler & 0xffff;
+    entry->kernelCS   = KERNEL_CODE_SELECTOR;
+    entry->attributes = attributes;
+    entry->reserved   = 0;
+#if PH_ARCH == PH_ARCH_X86_64
+    entry->ist       = 0;
+    entry->isrMiddle = (handler & 0xffff0000) >> 16;
+    entry->isrHigh   = (handler & 0xffffffff00000000) >> 32;
+#elif PH_ARCH == PH_ARCH_IA32
+    entry->isrHigh = isr >> 16;
+#endif
 }
+
+static void unhandledInterrupt(CPUContext* context)
+{
+    if (context->interruptVector < 0x20) raiseException(context);
+    LogError("\nAn unhandled interrupt 0x%02x occured",
+             context->interruptVector);
+
+    for (;;) { __asm__ volatile("cli; hlt"); }
+}
+
+extern "C" void raiseInterrupt(CPUContext* context)
+{
+    interruptHandlers[context->interruptVector](context);
+    LAPIC::SendEOI();
+}
+
 namespace IDT
 {
-    void RegisterInterruptHandler(uint8_t vector, uintptr_t isr, uint8_t flags)
+    void Initialize()
     {
-        IDTEntry* entry   = entries + vector;
-        entry->isrLow     = isr & 0xffff;
-        entry->kernelCS   = GDT_KERNEL_CODE_SELECTOR64;
-        entry->attributes = flags;
-        entry->reserved   = 0;
-#if PH_ARCH == PH_ARCH_X86_64
-        entry->ist       = 0;
-        entry->isrMiddle = (isr & 0xffff0000) >> 16;
-        entry->isrHigh   = (isr & 0xffffffff00000000) >> 32;
-#elif PH_ARCH == PH_ARCH_IA32
-        entry->isrHigh = isr >> 16;
-#endif
+        for (uint32_t i = 0; i < 256; i++)
+        {
+            idtWriteEntry(i, reinterpret_cast<uintptr_t>(interrupt_handlers[i]),
+                          0x80 | GATE_TYPE_INTERRUPT);
+            interruptHandlers[i] = unhandledInterrupt;
+        }
+
+        LogInfo("IDT Initialized!");
     }
 
     void Load()
     {
-        IDTR idtr  = {};
-        idtr.limit = sizeof(entries) - 1;
-        idtr.base  = reinterpret_cast<uintptr_t>(entries);
-
+#pragma pack(push, 1)
+        struct
+        {
+            uint16_t  limit;
+            uintptr_t base;
+        } idtr;
+#pragma pack(pop)
+        idtr.limit = sizeof(idtEntries) - 1;
+        idtr.base  = reinterpret_cast<uintptr_t>(idtEntries);
         __asm__ volatile("lidt %0" : : "m"(idtr));
     }
-} // namespace IDT
-#if PH_ARCH == PH_ARCH_X86_64
-struct InterruptFrame
-{
-    uint64_t interruptNumber;
-    uint64_t rip;
-    uint64_t cs;
-    uint64_t rflags;
-    uint64_t rsp;
-    uint64_t ss;
-};
-// TODO: Using int thunk might be a good idea
-#elif PH_ARCH == PH_ARCH_IA32
-struct InterruptFrame
-{
-    uint32_t rip;
-    uint32_t cs;
-    uint32_t rflags;
-};
-#endif
 
-__attribute__((interrupt)) void
-unhandledInterrupt(InterruptFrame* interruptFrame)
-{
-    LogWarn("Unhandled interrupt has occured! rip: %#p\n", interruptFrame->rip);
-    __asm__("cli;hlt");
-}
+    void RegisterInterruptHandler(uint32_t vector, InterruptHandler handler,
+                                  uint8_t dpl)
+    {
+        Assert(vector <= 256);
+        interruptHandlers[vector] = handler;
+        idtEntries[vector].dpl    = dpl;
+    }
+
+} // namespace IDT
+
+#pragma region exception_names
+const char*    exceptionNames[] = {
+    "Divide-by-zero",
+    "Debug",
+    "Non-Maskable Interrupt",
+    "Breakpoint",
+    "Overflow",
+    "Bound Range Exceeded",
+    "Invalid Opcode",
+    "Device not available",
+    "Double Fault",
+    "Coprocessor Segment Overrun",
+    "Invalid TSS",
+    "Segment Not Present",
+    "Stack-Segment Fault",
+    "General Protection Fault",
+    "Page Fault",
+    "Reserved",
+    "x87 Floating-Point Exception",
+    "Alignment Check",
+    "Machine Check",
+    "SIMD Floating-Point Exception",
+    "Control Protection Exception",
+    "Reserved",
+    "Reserved",
+    "Reserved",
+    "",
+    "Virtualization Exception",
+    "Reserved",
+    "Reserved",
+    "Hypervisor Injection Exception",
+    "VMM Communication Exception",
+    "Security Exception",
+    "Reserved",
+    "Triple Fault",
+    "FPU Error Interrupt",
+};
+#pragma endregion

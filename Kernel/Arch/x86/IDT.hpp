@@ -1,49 +1,21 @@
 #pragma once
 
-#include "Arch/Arch.hpp"
+#include "Arch/x86/CPU.hpp"
 
-#include <stdint.h>
+#include <stddef.h>
 
-inline constexpr const uint32_t MAX_IDT_ENTRIES = 256;
+using InterruptHandler                    = void (*)(CPUContext* context);
 
-#pragma pack(push, 1)
-struct IDTEntry
-{
-    uint16_t isrLow;
-    uint16_t kernelCS;
-#if PH_ARCH == PH_ARCH_X86_64
-    uint8_t ist;
-#elif PH_ARCH == PH_ARCH_IA32
-    uint8_t  reserved;
-#endif
-    union
-    {
-        uint8_t attributes;
-        struct
-        {
-            uint8_t gateType : 4;
-            uint8_t unused   : 1;
-            uint8_t dpl      : 2;
-            uint8_t present  : 1;
-        };
-    };
-#if PH_ARCH == PH_ARCH_X86_64
-    uint16_t isrMiddle;
-    uint32_t isrHigh;
-    uint32_t reserved;
-#elif PH_ARCH == PH_ARCH_IA32
-    uint16_t isrHigh;
-#endif
-};
-#pragma pack(pop)
-
-inline constexpr const uint32_t GATE_TYPE_INTERRUPT = 0xe;
-inline constexpr const uint32_t GATE_TYPE_TRAP      = 0xf;
+inline constexpr const uint32_t DPL_RING0 = 0x00;
+inline constexpr const uint32_t DPL_RING1 = 0x01;
+inline constexpr const uint32_t DPL_RING2 = 0x02;
+inline constexpr const uint32_t DPL_RING3 = 0x03;
 
 namespace IDT
 {
     void Initialize();
-    void RegisterInterruptHandler(uint8_t vector, uintptr_t isr, uint8_t flags);
-
     void Load();
+
+    void RegisterInterruptHandler(uint32_t vector, InterruptHandler handler,
+                                  uint8_t dpl = DPL_RING0);
 } // namespace IDT
