@@ -2,11 +2,15 @@
 
 #include "KLibC.hpp"
 
+#include "Arch/x86/IO.hpp"
 #include "Drivers/Terminal.hpp"
 
-static bool logE9       = false;
-static bool logTerminal = false;
-static bool logSerial   = false;
+#include "Scheduler/Spinlock.hpp"
+
+static bool     logE9       = false;
+static bool     logTerminal = false;
+static bool     logSerial   = false;
+static Spinlock lock        = {};
 
 namespace Logger
 {
@@ -15,8 +19,7 @@ namespace Logger
 #if PH_ENABLE_LOGGING == false
         return;
 #endif
-        if (logE9)
-            ; // TODO: outb(0xe9, c);
+        if (logE9) IO::Out<byte>(0xe9, c);
         if (logTerminal) Terminal::PutChar(c);
         if (logSerial)
             ;
@@ -65,10 +68,10 @@ namespace Logger
         va_start(args, fmt);
         Logv(level, fmt, args);
         va_end(args);
-        Terminal::PrintString("\n\r");
     }
     void Logv(LogLevel level, const char* fmt, va_list& args)
     {
+        lock.Lock();
         switch (level)
         {
             case LogLevel::eTrace:
@@ -122,14 +125,14 @@ namespace Logger
             loop_end:
                 char* numStart  = const_cast<char*>(fmt);
                 int   numStrLen = 0;
-                while (*fmt != '\0' && *fmt >= '0' && *fmt <= '9')
+                while (*fmt >= '0' && *fmt <= '9')
                 {
                     numStrLen++;
                     fmt++;
                 }
                 int lengthSpecifier = 0;
                 if (numStrLen > 0)
-                    lengthSpecifier = atoi<size_t>(numStart, numStrLen);
+                    lengthSpecifier = atoi<int>(numStart, numStrLen);
                 if (*fmt == '*')
                 {
                     lengthSpecifier = va_arg(args, int);
@@ -166,9 +169,14 @@ namespace Logger
                     zeroPadding, lengthSpecifier)
                 switch (*fmt)
                 {
+                    case 'b':
+                        base = 2;
+                        if (altConversion) LogString("0b");
+                        goto print_unsigned;
                     case 'o':
                         base = 8;
                         if (altConversion) LogChar('0');
+                        goto print_unsigned;
                     case 'p': argLength = ArgLength::ePointer;
                     case 'X':
                     case 'x':
@@ -180,21 +188,21 @@ namespace Logger
                         }
                     case 'u':
                     {
+                    print_unsigned:
                         if (argLength == ArgLength::eInt) LogNum(unsigned int);
                         else if (argLength == ArgLength::eLong)
                             LogNum(unsigned long);
                         else if (argLength == ArgLength::eLongLong)
-                            LogNum(unsigned long);
+                            LogNum(unsigned long long);
                         else if (argLength == ArgLength::eSizeT) LogNum(size_t);
-                        else if (argLength == ArgLength::ePointer)
-                            LogNum(uintptr_t);
+                        else LogNum(uintptr_t);
                         break;
                     }
                     case 'd':
                     case 'i':
                     {
                         if (argLength == ArgLength::eInt) LogNum(int);
-                        else if (argLength == ArgLength::eLong) LogNum(long);
+                        else if (argLength == ArgLength::eLong) LogNum(long long);
                         else if (argLength == ArgLength::eLongLong)
                             LogNum(long);
                         break;
@@ -220,6 +228,9 @@ namespace Logger
 
         Terminal::SetForegroundColor(0xffffff);
         Terminal::SetBackgroundColor(0x000000);
+        Terminal::PrintString("\n\r");
+
+        lock.Unlock();
     }
 
     void EnableE9Logging() { logE9 = true; }
