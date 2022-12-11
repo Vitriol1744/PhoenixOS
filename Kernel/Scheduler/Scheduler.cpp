@@ -18,7 +18,6 @@
 #define PAGE_SIZE PhysicalMemoryManager::GetPageSize()
 
 static Vector<Process*>  processQueue  = {};
-static Vector<Thread*>   threadList   = {};
 static Process*          kernelProcess    = nullptr;
 static Spinlock          lock         = {};
 
@@ -38,6 +37,7 @@ extern "C" void          switch_process(CPUContext* context);
 
 void                     Schedule(CPUContext* context)
 {
+    //TODO: Implement some idle task when no threads are available for running
     lock.Lock();
     CPU*     cpu = CPU::GetCurrent();
     Process*  nextProcess;
@@ -48,7 +48,6 @@ void                     Schedule(CPUContext* context)
 
     if (nextProcess->pid == -1) goto exit_schedule;
 
-    if (nextProcess->state == ProcessState::eRunning) goto exit_schedule;
     if (nextProcess->threads.GetSize() == 0) goto exit_schedule;
     nextThread = nextProcess->threads[0];
     if (nextThread->tid == -1) goto exit_schedule;
@@ -59,7 +58,6 @@ void                     Schedule(CPUContext* context)
         auto lastProcess = cpu->runningThread->process;
         auto lastThread = cpu->runningThread;
 
-        lastProcess->state = ProcessState::eIdle;
         lastThread->state  = ThreadState::eIdle;
 
         processQueue.PushBack(lastProcess);
@@ -67,12 +65,13 @@ void                     Schedule(CPUContext* context)
         if (cpu->runningThread) cpu->runningThread->context = *context;
         lastThread->context = *context;
     }
+    nextProcess->threads.PopFront();
+    nextProcess->threads.PushBack(nextThread);
 
     cpu->runningThread = nextThread;
 
     VirtualMemoryManager::SwitchPageMap(cpu->pageMap);
 
-    nextProcess->state = ProcessState::eRunning;
     nextThread->state  = ThreadState::eRunning;
 
     processQueue.PopFront();
@@ -110,7 +109,6 @@ namespace Scheduler
     {
         auto process = new Process;
         process->pid     = GetUniquePID();
-        process->state   = ProcessState::eIdle;
         process->pageMap = pageMap;
         if (!pageMap.Exists()) LogError("Invalid PageMap!");
 
@@ -120,9 +118,9 @@ namespace Scheduler
         return process;
     }
 
-    ThreadID CreateThread(Process* process, uintptr_t rip, uint16_t cs)
+    Thread* CreateThread(Process* process, uintptr_t rip, uint16_t cs, uint16_t ds)
     {
-        if (process->pid == -1) return -1;
+        if (process->pid == -1) return nullptr;
 
         const uintptr_t stack
             = (uintptr_t)PhysicalMemoryManager::CallocatePages(1) + PAGE_SIZE;
@@ -135,16 +133,23 @@ namespace Scheduler
         thread->kernelStackSize = PAGE_SIZE;
         thread->context.rip     = rip;
         thread->context.rsp     = thread->kernelStack;
-        thread->context.cs      = cs;
-        thread->context.ss      = cs + 8;
+        thread->context.cs      = KERNEL_CODE_SELECTOR;
+        thread->context.ss      = KERNEL_DATA_SELECTOR;
         thread->context.flags = 0x202;
 
         lock.Lock();
-        threadList.PushBack(thread);
         process->threads.PushBack(thread);
         lock.Unlock();
 
-        return thread->tid;
+        return thread;
+    }
+    Thread*  CreateKernelThread(Process* process, uintptr_t rip)
+    {
+        return CreateThread(process, rip, KERNEL_CODE_SELECTOR, KERNEL_DATA_SELECTOR);
+    }
+    Thread*  CreateUserThread(Process* process, uintptr_t rip)
+    {
+        return CreateThread(process, rip, USERLAND_CODE_SELECTOR, USERLAND_DATA_SELECTOR);
     }
 
     Process* GetKernelProcess() { return kernelProcess; }

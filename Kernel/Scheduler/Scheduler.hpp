@@ -17,7 +17,8 @@ namespace Scheduler
     __attribute__((noreturn)) void Yield();
 
     Process*                      CreateProcess(PageMap& page_map);
-    ThreadID  CreateThread(Process* process, uintptr_t rip, uint16_t cs);
+    Thread*  CreateKernelThread(Process* process, uintptr_t rip);
+    Thread*  CreateUserThread(Process* process, uintptr_t rip);
 
     Process* GetKernelProcess();
 } // namespace Scheduler

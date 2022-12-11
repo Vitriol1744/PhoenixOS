@@ -1,9 +1,9 @@
-/*
- * Created by vitriol1744 on 25.11.2022.
- * Copyright (c) 2022-2022, Szymon Zemke <Vitriol1744@gmail.com>
- *
- * SPDX-License-Identifier: GPL-3
- */
+;
+;  Created by vitriol1744 on 25.11.2022.
+;  Copyright (c) 2022-2022, Szymon Zemke <Vitriol1744@gmail.com>
+;
+;  SPDX-License-Identifier: GPL-3
+;
 use64
 
 section .text

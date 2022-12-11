@@ -14,12 +14,6 @@
 
 using ProcessID = int64_t;
 
-enum class ProcessState
-{
-    eIdle,
-    eRunning,
-};
-
 enum class ProcessRing
 {
     Ring0 = 0,
@@ -32,7 +26,6 @@ struct Process
     ProcessID    pid = -1;
     ProcessRing  ring = ProcessRing::Ring3;
     Vector<struct Thread*> threads;
-    ProcessState state = ProcessState::eIdle;
     uint64_t     timeUsed = 0;
 
     PageMap      pageMap = {};

@@ -10,6 +10,8 @@
 
 #define KERNEL_CODE_SELECTOR 0x08ull
 #define KERNEL_DATA_SELECTOR 0x10ull
+#define USERLAND_CODE_SELECTOR (0x18ull | 3ull)
+#define USERLAND_DATA_SELECTOR (0x20ull | 3ull)
 
 #pragma pack(push, 1)
 struct TaskStateSegment
