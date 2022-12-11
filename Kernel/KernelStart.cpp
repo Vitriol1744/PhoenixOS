@@ -16,15 +16,8 @@
 
 #include "Memory/PhysicalMemoryManager.hpp"
 
-[[noreturn]] static void thread1();
+[[noreturn]] static void kernelInitialize();
 [[noreturn]] static void thread2();
-
-extern "C" [[maybe_unused]] [[noreturn]] void                       user_function()
-{
-    LogInfo("UserMode");
-    const char* str = "Hello, World!";
-    while (true) __asm__ volatile("mov %0, %%rdi; int $0x80" : : "r"(str));
-}
 
 using ConstructorFunction = void (*)();
 
@@ -85,13 +78,11 @@ extern "C" __attribute__((noreturn)) void kernelStart()
 
     Scheduler::Initialize();
 
-    Scheduler::CreateThread(Scheduler::GetKernelProcess(), (uintptr_t)thread1,
-                            KERNEL_CODE_SELECTOR);
+    Scheduler::CreateKernelThread(Scheduler::GetKernelProcess(), reinterpret_cast<uintptr_t>(kernelInitialize));
 
     auto p
         = Scheduler::CreateProcess(VirtualMemoryManager::GetKernelPageMap());
-    uint16_t cs = 0x18 | 3;
-    Scheduler::CreateThread(p, (uintptr_t)thread2, cs);
+    Scheduler::CreateUserThread(p, (uintptr_t)thread2);
 
     Scheduler::Yield();
 
@@ -103,12 +94,9 @@ extern "C" __attribute__((noreturn)) void kernelStart()
     #define LogWarn(...)
 #endif
 
-[[noreturn]] static void thread1()
+[[noreturn]] static void kernelInitialize()
 {
-    while (true)
-    {
-        LogWarn("DONE");
-    }
+    while (true) LogInfo("W");
 }
 [[noreturn]] static void thread2()
 {
@@ -118,5 +106,6 @@ extern "C" __attribute__((noreturn)) void kernelStart()
     while (true)
     {
         __asm__ volatile("mov %0, %%rdi; int $0x80" : : "r"(str));
+        __asm__ volatile("nop");
     }
 }
