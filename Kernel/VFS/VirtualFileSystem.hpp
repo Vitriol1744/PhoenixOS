@@ -5,3 +5,8 @@
  * SPDX-License-Identifier: GPL-3
  */
 #pragma once
+
+namespace VirtualFileSystem
+{
+
+}
