@@ -1,0 +1,79 @@
+/*
+ * Created by vitriol1744 on 06.01.2023.
+ * Copyright (c) 2022-2023, Szymon Zemke <Vitriol1744@gmail.com>
+ *
+ * SPDX-License-Identifier: GPL-3
+ */
+#pragma once
+
+#include "details/allocator"
+#include "details/char_traits"
+#include "details/string_view"
+
+#include <memory>
+#include <type_traits>
+
+namespace std
+{
+    template <typename CharT, typename Traits = std::char_traits<CharT>,
+              typename Allocator = std::allocator<CharT>>
+    class basic_string
+    {
+      public:
+        using traits_type     = Traits;
+        using value_type      = CharT;
+        using allocator_type  = Allocator;
+        //        // TODO: size_type = allocator_traits
+        //        using size_type      =
+        //        std::allocator_traits<Allocator>::size_type; using
+        //        difference_type
+        //            = std::allocator_traits<Allocator>::difference_type;
+        using reference       = value_type&;
+        using const_reference = const value_type&;
+        //        using pointer         =
+        //        std::allocator_traits<Allocator>::pointer; using const_pointer
+        //        = std::allocator_traits<Allocator>::const_pointer;
+        // TODO: iterators
+
+        constexpr basic_string() noexcept(noexcept(Allocator()))
+            : basic_string(Allocator())
+        {
+        }
+        //        explicit constexpr basic_string(const Allocator& alloc)
+        //        noexcept; constexpr basic_string(size_type count, CharT ch,
+        //                               const Allocator& alloc = Allocator());
+        //        constexpr basic_string(const basic_string& other, size_type
+        //        pos,
+        //                               const Allocator& alloc = Allocator());
+        //        constexpr basic_string(const basic_string& other, size_type
+        //        pos,
+        //                               size_type        count,
+        //                               const Allocator& alloc = Allocator());
+        //        constexpr basic_string(const CharT* s, size_type count,
+        //                               const Allocator& alloc = Allocator());
+        //        constexpr basic_string(const CharT*     s,
+        //                               const Allocator& alloc = Allocator());
+        //        template <class InputIt>
+        //
+        //        constexpr basic_string(InputIt first, InputIt last,
+        //                               const Allocator& alloc = Allocator());
+        //        constexpr basic_string(const basic_string& other);
+        //        constexpr basic_string(const basic_string& other,
+        //                               const Allocator&    alloc);
+        //        constexpr basic_string(basic_string&& other) noexcept;
+        //        constexpr basic_string(basic_string&& other, const Allocator&
+        //        alloc); constexpr basic_string(std::initializer_list<CharT>
+        //        ilist,
+        //                               const Allocator& alloc = Allocator());
+        //        template <typename StringViewLike>
+        //        explicit constexpr basic_string(const StringViewLike& t,
+        //                                        const Allocator& alloc =
+        //                                        Allocator());
+        //        template <typename StringViewLike>
+        //        constexpr basic_string(const StringViewLike& t, size_type pos,
+        //                               size_type        n,
+        //                               const Allocator& alloc = Allocator());
+    };
+
+    using string = std::basic_string<char>;
+} // namespace std
