@@ -1,3 +1,10 @@
-[submodule "boot"]
-	path = boot
-	url = https://github.com/Vitriol1744/PhoenixOS-Bootloader
+[submodule "ThirdParty/limine"]
+	path = ThirdParty/limine
+	url = https://github.com/limine-bootloader/limine.git
+	branch = v5.x-branch-binary
+[submodule "ThirdParty/fmt"]
+	path = ThirdParty/fmt
+	url = https://github.com/fmtlib/fmt
+[submodule "ThirdParty/parallel-hashmap"]
+	path = ThirdParty/parallel-hashmap
+	url = https://github.com/greg7mdp/parallel-hashmap
