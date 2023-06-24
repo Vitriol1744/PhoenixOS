@@ -8,3 +8,6 @@
 [submodule "ThirdParty/parallel-hashmap"]
 	path = ThirdParty/parallel-hashmap
 	url = https://github.com/greg7mdp/parallel-hashmap
+[submodule "ThirdParty/libstdcxx-headers"]
+	path = ThirdParty/libstdcxx-headers
+	url = https://github.com/ilobilo/libstdcxx-headers

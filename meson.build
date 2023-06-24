@@ -16,6 +16,7 @@ include_directories = [
     include_directories('ThirdParty/limine'),
     include_directories('Kernel'),
     include_directories('ThirdParty/flanterm'),
+    include_directories('ThirdParty/libstdcxx-headers/include'),
 ]
 
 add_global_arguments([
