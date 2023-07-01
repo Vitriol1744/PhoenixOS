@@ -31,10 +31,11 @@ ld_args = [
 ]
 
 if arch == 'x86_64'
+    cxx_args += ['-DPH_ARCH=PH_ARCH_X86_64']
     subdir('Arch/x86_64')
 elif arch == 'aarch64'
     subdir('Arch/aarch64')
-    cxx_args += ['-DPH_ARCH=0x01']
+    cxx_args += ['-DPH_ARCH=PH_ARCH_AARCH64']
 else
     error('Unknown architecture: ' + arch)
 endif

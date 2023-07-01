@@ -84,12 +84,27 @@ else
 endif
 
 iso_dir = 'iso_root'
+
+ksyms = custom_target('ksyms',
+        input: [kernel_elf],
+        output: 'ksyms.sym',
+        command: [
+            './generate_symbols.sh'
+        ],
+        build_by_default: true,
+        console: true,
+        install: false,
+        depends: [kernel_elf]
+    )
+
 iso_files = [
-    meson.source_root() / 'limine.cfg',
-    meson.source_root() / 'ThirdParty/limine/limine-bios.sys',
-    meson.source_root() / 'ThirdParty/limine/limine-bios-cd.bin',
-    meson.source_root() / 'ThirdParty/limine/limine-uefi-cd.bin',
+        meson.source_root() / 'limine.cfg',
+        meson.source_root() / 'ThirdParty/limine/limine-bios.sys',
+        meson.source_root() / 'ThirdParty/limine/limine-bios-cd.bin',
+        meson.source_root() / 'ThirdParty/limine/limine-uefi-cd.bin',
+        ksyms
     ]
+
 iso = custom_target('iso',
     input : [kernel_elf],
     output : 'PhoenixOS.iso',

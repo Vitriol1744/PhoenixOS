@@ -7,9 +7,13 @@
 #pragma once
 
 #include "Utility/Logger.hpp"
+#include "Utility/Stacktrace.hpp"
 
-#define BIT(n)    (1ull << n)
-#define PH_UNUSED [[maybe_unused]]
+#define BIT(n)          (1ull << n)
+#define PH_UNUSED       [[maybe_unused]]
+
+#define PH_ARCH_X86_64  BIT(0)
+#define PH_ARCH_AARCH64 BIT(1)
 
 #include <stdarg.h>
 #include <stddef.h>
@@ -22,9 +26,9 @@ using InterruptHandlerFunction = void (*)(struct CPUContext*);
 [[noreturn]]
 PH_UNUSED inline static void halt(struct CPUContext* = nullptr)
 {
-#if PH_ARCH == 0x00
+#if PH_ARCH == PH_ARCH_X86_64
     while (true) __asm__ volatile("cli; hlt");
-#else
+#elif PH_ARCH == PH_ARCH_AARCH64
     while (true) asm volatile("wfi");
 #endif
 }
@@ -44,7 +48,7 @@ inline void panic(std::string_view msg)
     Logger::LogChar(RESET_COLOR);
     Logger::LogString("\n\r");
 
-    // TODO: Print stacktrace
+    Stacktrace::Print(16);
     halt(nullptr);
 }
 #define Panic(...)   panic(std::format(__VA_ARGS__))

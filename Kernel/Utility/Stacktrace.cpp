@@ -101,7 +101,8 @@ namespace Stacktrace
     void Print(size_t maxFrames)
     {
         StackFrame* stackFrame;
-#if PH_ARCH == 0x00
+        // TODO: Stacktrace for aarch64
+#if PH_ARCH == PH_ARCH_X86_64
         __asm__ volatile("mov %%rbp, %0" : "=r"(stackFrame) : : "memory");
 #else
         return;

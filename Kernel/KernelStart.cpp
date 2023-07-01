@@ -7,10 +7,12 @@
 #include "Arch/x86_64/GDT.hpp"
 #include "Arch/x86_64/IDT.hpp"
 
+#include "BootInfo.hpp"
 #include "Drivers/Serial.hpp"
 #include "Drivers/Terminal.hpp"
 #include "Memory/PhysicalMemoryManager.hpp"
 #include "Utility/Logger.hpp"
+#include "Utility/Stacktrace.hpp"
 
 #include <format>
 #include <functional>
@@ -41,7 +43,7 @@ static void hcf() { halt(); }
 
 extern "C" void kernelStart()
 {
-#if PH_ARCH == 0x00
+#if PH_ARCH == PH_ARCH_X86_64
     __asm__ volatile("cli");
 #endif
     if (Terminal::Initialize()) Logger::EnableTerminalLogging();
@@ -51,6 +53,7 @@ extern "C" void kernelStart()
     TryInit(Serial::Initialize(), "Serial", Logger::EnableSerialLogging(),
             (void)0);
     TryInit(PhysicalMemoryManager::Initialize(), "PMM", (void)0, void(0));
+    Stacktrace::Initialize();
 
     int                     b        = 34;
     std::function<int(int)> do_stuff = [&](int a) -> int
@@ -74,7 +77,7 @@ extern "C" void kernelStart()
     std::string s3 = s1 + s2;
 
     LogInfo("Yo! {} White!", "Mistuh");
-    //    Panic("Something happened! {}", "Hello1");
+    Panic("Something happened! {}", "Hello1");
 
     hcf();
 }

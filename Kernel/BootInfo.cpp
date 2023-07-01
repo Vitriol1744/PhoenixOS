@@ -77,7 +77,7 @@ namespace BootInfo
         (void)entryPointRequest.response;
 
         // Enable SSE
-#if PH_ARCH == 0x00
+#if PH_ARCH == PH_ARCH_X86_64
         __asm__ volatile(
             "mov %%cr0, %%rax\n"
             "and $0xfffb, %%ax\n"

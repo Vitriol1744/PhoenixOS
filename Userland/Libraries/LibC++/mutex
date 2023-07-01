@@ -22,9 +22,9 @@
 namespace Arch
 {
     // TODO: Move it somewhere else
-#if PH_ARCH == 0x00
+#if PH_ARCH == PH_ARCH_X86_64
     inline void Pause() { __asm__ volatile("pause"); }
-#elif PH_ARCH == 0x01
+#elif PH_ARCH == PH_ARCH_AARCH64
     inline void Pause() { __asm__ volatile("yield"); }
 #endif
 } // namespace Arch
