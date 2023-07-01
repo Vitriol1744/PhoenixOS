@@ -22,7 +22,11 @@ using InterruptHandlerFunction = void (*)(struct CPUContext*);
 [[noreturn]]
 PH_UNUSED inline static void halt(struct CPUContext* = nullptr)
 {
+#if PH_ARCH == 0x00
     while (true) __asm__ volatile("cli; hlt");
+#else
+    while (true) asm volatile("wfi");
+#endif
 }
 
 #define ENABLE_CLEAR_SCREEN_ON_PANIC false

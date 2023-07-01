@@ -67,6 +67,8 @@ static Framebuffer      framebuffer         = {};
 static MemoryMapEntry** memoryMap           = nullptr;
 static uint64_t         memoryMapEntryCount = 0;
 
+extern "C" void         kernelStart();
+
 namespace BootInfo
 {
     extern "C" void Initialize()
@@ -75,6 +77,7 @@ namespace BootInfo
         (void)entryPointRequest.response;
 
         // Enable SSE
+#if PH_ARCH == 0x00
         __asm__ volatile(
             "mov %%cr0, %%rax\n"
             "and $0xfffb, %%ax\n"
@@ -84,6 +87,7 @@ namespace BootInfo
             "or $(3 << 9), %%ax\n"
             "mov %%rax, %%cr4\n"
             :);
+#endif
 
         Logger::EnableE9Logging();
         if (!framebufferRequest.response
@@ -115,7 +119,8 @@ namespace BootInfo
             memmapRequest.response->entries);
         memoryMapEntryCount = memmapRequest.response->entry_count;
 
-        __asm__ goto("jmp kernelStart");
+        kernelStart();
+        //        __asm__ goto("jmp kernelStart");
     }
     uint64_t     GetHHDMOffset() { return hhdmRequest.response->offset; }
     Framebuffer* GetFramebuffer() { return &framebuffer; }

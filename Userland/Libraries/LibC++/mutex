@@ -21,7 +21,12 @@
 
 namespace Arch
 {
+    // TODO: Move it somewhere else
+#if PH_ARCH == 0x00
     inline void Pause() { __asm__ volatile("pause"); }
+#elif PH_ARCH == 0x01
+    inline void Pause() { __asm__ volatile("yield"); }
+#endif
 } // namespace Arch
 
 namespace std

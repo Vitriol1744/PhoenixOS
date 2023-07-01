@@ -17,7 +17,7 @@
 #include <string>
 
 // Halt and catch fire function.
-static void hcf() { asm volatile("cli; hlt"); }
+static void hcf() { halt(); }
 
 // TODO: Thread-safety for Terminal and Logger
 
@@ -34,13 +34,16 @@ static void hcf() { asm volatile("cli; hlt"); }
         {                                                                      \
             Logger::Log(LogLevel::eError,                                      \
                         "Initializing " msg                                    \
-                        "...\t\t[\u001b[32mfailed\u001b[0m]");                 \
+                        "...\t\t[\u001b[31mfailed\u001b[0m]");                 \
             on_failure;                                                        \
         }                                                                      \
     }
 
 extern "C" void kernelStart()
 {
+#if PH_ARCH == 0x00
+    __asm__ volatile("cli");
+#endif
     if (Terminal::Initialize()) Logger::EnableTerminalLogging();
     Logger::LogChar(RESET_COLOR);
     Serial::Initialize();
@@ -71,7 +74,7 @@ extern "C" void kernelStart()
     std::string s3 = s1 + s2;
 
     LogInfo("Yo! {} White!", "Mistuh");
-    Panic("Something happened! {}", "Hello1");
+    //    Panic("Something happened! {}", "Hello1");
 
     hcf();
 }

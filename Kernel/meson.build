@@ -16,16 +16,7 @@ cxx_args = [
     '-Wpedantic',
     '-fno-lto',
     '-m64',
-    '-march=x86-64',
-    '-mabi=sysv',
-    #'-mno-80387',
-    '-mno-mmx',
-    #'-target x86_64-none',
-    '-mno-sse',
-    '-mno-sse2',
     '-mno-red-zone',
-    '-msoft-float',
-    '-mcmodel=kernel'
 ]
 
 ld_args = [
@@ -34,9 +25,19 @@ ld_args = [
     '-no-pie',
     '-static',
     '--rtlib=compiler-rt',
+    '-fuse-ld=lld',
     #'-z max-page-size=0x1000',
     '-T' + meson.current_source_dir() + '/linker.'+arch+'.ld'
 ]
+
+if arch == 'x86_64'
+    subdir('Arch/x86_64')
+elif arch == 'aarch64'
+    subdir('Arch/aarch64')
+    cxx_args += ['-DPH_ARCH=0x01']
+else
+    error('Unknown architecture: ' + arch)
+endif
 
 args = []
 kernel_elf = executable('PhoenixOS.elf', srcs,

@@ -11,8 +11,6 @@
 
 namespace Stacktrace
 {
-    using std::size_t;
-
     namespace
     {
         struct StackFrame
@@ -27,12 +25,12 @@ namespace Stacktrace
             uintptr_t address;
         };
 
-        std::size_t symbolCount                = 0;
-        Symbol*     symbols                    = nullptr;
-        uintptr_t   lowestKernelSymbolAddress  = 0xffffffff;
-        uintptr_t   highestKernelSymbolAddress = 0x00000000;
+        size_t    symbolCount                = 0;
+        Symbol*   symbols                    = nullptr;
+        uintptr_t lowestKernelSymbolAddress  = 0xffffffff;
+        uintptr_t highestKernelSymbolAddress = 0x00000000;
 
-        uint64_t    ParseHexDigit(char digit)
+        uint64_t  ParseHexDigit(char digit)
         {
             if (digit >= '0' && digit <= '9') return digit - '0';
             Assert(digit >= 'a' && digit <= 'f');
@@ -103,8 +101,11 @@ namespace Stacktrace
     void Print(size_t maxFrames)
     {
         StackFrame* stackFrame;
+#if PH_ARCH == 0x00
         __asm__ volatile("mov %%rbp, %0" : "=r"(stackFrame) : : "memory");
-
+#else
+        return;
+#endif
         for (size_t i = 0; stackFrame != nullptr && i < maxFrames; i++)
         {
             uint64_t rip = stackFrame->rip;
