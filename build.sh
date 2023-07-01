@@ -1,2 +1,1 @@
-cd build && ninja
-cd ..
+cd build && ninja && cd ..
