@@ -1,0 +1,20 @@
+/*
+ * Created by vitriol1744 on 14.06.2023.
+ * Copyright (c) 2022-2023, Szymon Zemke <Vitriol1744@gmail.com>
+ *
+ * SPDX-License-Identifier: GPL-3
+ */
+#pragma once
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-field-initializers"
+#pragma clang diagnostic ignored "-Wunused-parameter"
+#include "fmt/core.h"
+#pragma clang diagnostic pop
+
+namespace std
+{
+    using fmt::format;
+    using fmt::formatter;
+    using fmt::print;
+} // namespace std

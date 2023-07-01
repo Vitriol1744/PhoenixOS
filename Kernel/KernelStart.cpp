@@ -4,34 +4,74 @@
  *
  * SPDX-License-Identifier: GPL-3
  */
-#include <stddef.h>
-#include "limine.h"
+#include "Arch/x86_64/GDT.hpp"
+#include "Arch/x86_64/IDT.hpp"
 
-static volatile limine_framebuffer_request framebuffer_request =
-{
-        .id = LIMINE_FRAMEBUFFER_REQUEST,
-        .revision = 0
-};
+#include "Drivers/Serial.hpp"
+#include "Drivers/Terminal.hpp"
+#include "Memory/PhysicalMemoryManager.hpp"
+#include "Utility/Logger.hpp"
+
+#include <format>
+#include <functional>
+#include <string>
 
 // Halt and catch fire function.
-static void hcf()
-{
-    asm volatile ("cli; hlt");
-}
+static void hcf() { asm volatile("cli; hlt"); }
+
+// TODO: Thread-safety for Terminal and Logger
+
+#define TryInit(cond, msg, on_success, on_failure)                             \
+    {                                                                          \
+        Logger::LogChar(RESET_COLOR);                                          \
+        if ((cond))                                                            \
+        {                                                                      \
+            Logger::Log(LogLevel::eTrace,                                      \
+                        "Initializing " msg "...\t\t[\u001b[32mok\u001b[0m]"); \
+            on_success;                                                        \
+        }                                                                      \
+        else                                                                   \
+        {                                                                      \
+            Logger::Log(LogLevel::eError,                                      \
+                        "Initializing " msg                                    \
+                        "...\t\t[\u001b[32mfailed\u001b[0m]");                 \
+            on_failure;                                                        \
+        }                                                                      \
+    }
 
 extern "C" void kernelStart()
 {
-    if (!framebuffer_request.response
-        || framebuffer_request.response->framebuffer_count < 1)
-        hcf();
+    if (Terminal::Initialize()) Logger::EnableTerminalLogging();
+    Logger::LogChar(RESET_COLOR);
+    Serial::Initialize();
+    Logger::EnableSerialLogging();
+    TryInit(Serial::Initialize(), "Serial", Logger::EnableSerialLogging(),
+            (void)0);
+    TryInit(PhysicalMemoryManager::Initialize(), "PMM", (void)0, void(0));
 
-    limine_framebuffer* framebuffer = framebuffer_request.response->framebuffers[0];
-
-    for (size_t i = 0; i < 100; i++)
+    int                     b        = 34;
+    std::function<int(int)> do_stuff = [&](int a) -> int
     {
-        auto fb_ptr = reinterpret_cast<uint32_t*>(framebuffer->address);
-        fb_ptr[i * (framebuffer->pitch / 4) + i] = 0x00ff00;
-    }
+        b = 12;
+        return a + b;
+    };
+    std::function<int(int)> do_stuff2 = do_stuff;
+
+    int                     value     = do_stuff2(122);
+    LogDebug("{}, {}", value, b);
+    LogTrace("{}, {}", value, b);
+    LogInfo("{}, {}", value, b);
+    LogWarn("{}, {}", value, b);
+    LogError("{}, {}", value, b);
+    LogFatal("{}, {}", value, b);
+    LogDebug("{}, {}", value, b);
+
+    std::string s1 = "hello";
+    std::string s2 = ", world!";
+    std::string s3 = s1 + s2;
+
+    LogInfo("Yo! {} White!", "Mistuh");
+    Panic("Something happened! {}", "Hello1");
 
     hcf();
 }

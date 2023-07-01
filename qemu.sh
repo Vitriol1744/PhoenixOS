@@ -1,1 +1,1 @@
-qemu-system-x86_64 build/PhoenixOS.iso
+qemu-system-x86_64 -serial stdio build/PhoenixOS.iso

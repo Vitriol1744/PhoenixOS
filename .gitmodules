@@ -11,3 +11,9 @@
 [submodule "ThirdParty/libstdcxx-headers"]
 	path = ThirdParty/libstdcxx-headers
 	url = https://github.com/ilobilo/libstdcxx-headers
+[submodule "ThirdParty/compiler_rt_builtins"]
+	path = ThirdParty/compiler_rt_builtins
+	url = https://github.com/ilobilo/compiler_rt_builtins
+[submodule "ThirdParty/smart_ptr"]
+	path = ThirdParty/smart_ptr
+	url = https://github.com/ilobilo/smart_ptr

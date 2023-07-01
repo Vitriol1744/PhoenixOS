@@ -1,0 +1,23 @@
+/*
+ * Created by vitriol1744 on 07.06.2023.
+ * Copyright (c) 2022-2023, Szymon Zemke <Vitriol1744@gmail.com>
+ *
+ * SPDX-License-Identifier: GPL-3
+ */
+#pragma once
+
+#undef ceil
+#undef isnan
+#undef isfinite
+#undef signbit
+
+namespace std
+{
+    inline constexpr auto ceil(auto val) { return __builtin_ceil(val); }
+
+    inline constexpr auto isnan(auto val) { return __builtin_isnan(val); }
+
+    inline constexpr auto isfinite(auto val) { return __builtin_isfinite(val); }
+
+    inline constexpr auto signbit(auto val) { return __builtin_signbit(val); }
+} // namespace std

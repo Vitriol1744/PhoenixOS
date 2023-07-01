@@ -1,0 +1,126 @@
+/*
+ * Created by vitriol1744 on 06.01.2023.
+ * Copyright (c) 2022-2023, Szymon Zemke <Vitriol1744@gmail.com>
+ *
+ * SPDX-License-Identifier: GPL-3
+ */
+#pragma once
+
+#include <cstddef>
+
+#include <cassert>
+#include <cmath>
+#include <cstring>
+#include <list>
+#include <memory>
+#include <utility>
+#include <vector>
+
+#include <cstdlib>
+#include <string>
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
+#include "parallel_hashmap/phmap.h"
+#pragma clang diagnostic pop
+
+namespace std
+{
+    template <typename Key, typename Type,
+              typename Hash     = phmap::priv::hash_default_hash<Key>,
+              typename KeyEqual = phmap::priv::hash_default_eq<Key>,
+              typename Allocator
+              = phmap::priv::Allocator<phmap::priv::Pair<const Key, Type>>>
+    using unordered_map
+        = phmap::flat_hash_map<Key, Type, Hash, KeyEqual, Allocator>;
+    //    template <typename Key, typename Value, typename Hash =
+    //    std::hash<Key>, typename KeyEqual = std::equal_to<Key>, typename
+    //    Allocator = std::allocator<std::pair<const Key, Value>>> class
+    //    unordered_map
+    //    {
+    //      public:
+    //        using key_type = Key;
+    //        using mapped_type = Value;
+    //        using value_type = std::pair<const Key, Value>;
+    //        using size_type = std::size_t;
+    //        using difference_type = std::ptrdiff_t;
+    //        using hasher = Hash;
+    //        using key_equal = KeyEqual;
+    //        using allocator = Allocator;
+    //        using reference = value_type&;
+    //        using const_reference = const value_type&;
+    //        using pointer = typename
+    //        std::allocator_traits<Allocator>::pointer; using const_pointer =
+    //        typename std::allocator_traits<Allocator>::const_pointer;
+    //
+    //        unordered_map()
+    //        {
+    //            bucket_size = 10;
+    //            buckets = new std::vector<std::pair<Key, Value>>;
+    //        }
+    //        typename std::vector<std::pair<Key, Value>>::iterator find(Key
+    //        key)
+    //        {
+    //            auto hashed_key = hash(key);
+    //            for (auto& i : buckets[hashed_key])
+    //            {
+    //                if (i.first == key) return &i;
+    //            }
+    //            return buckets[hashed_key].end();
+    //        }
+    //
+    //        Value& get(Key key)
+    //        {
+    //            auto it = find(key);
+    //            return it->second;
+    //        }
+    //        void insert(Key key, Value value)
+    //        {
+    //            auto it = find(key);
+    //            auto hashed_key = hash(key);
+    //            if(it != buckets[hashed_key].end())
+    //            {
+    //                it->second = value;
+    //                return;
+    //            }
+    //            buckets[hashed_key].push_back({ key, value });
+    //            total_elements++;
+    //            rehash_if_needed();
+    //        }
+    //
+    //        Value& operator[](const Key& key)
+    //        {
+    //            return get(key);
+    //        }
+    //        Value& operator[](Key&& key)
+    //        {
+    //            return get(key);
+    //        }
+    //
+    //      private:
+    //        std::vector<std::pair<Key, Value>>* buckets;
+    //        int bucket_size = 0;
+    //        int total_elements = 0;
+    //        int max_load_factor = 2;
+    //
+    //        int hash(Key key)
+    //        {
+    //            std::hash<Key> hash;
+    //            int hashed_key = hash(key);
+    //
+    //            return hashed_key % bucket_size;
+    //        }
+    //        void rehash_if_needed()
+    //        {
+    //            if (total_elements / bucket_size <= max_load_factor) return;
+    //            bucket_size *= 2;
+    //            auto new_buckets = new vector<pair<Key, Value>>[bucket_size];
+    //            for(int i = 0; i < bucket_size / 2; i++)
+    //            {
+    //                for(auto& kv_itr: buckets[i])
+    //                    new_buckets[hash(kv_itr.first)].push_back(kv_itr);
+    //            }
+    //            delete[] buckets;
+    //            buckets = new_buckets;
+    //        }
+    //    };
+} // namespace std

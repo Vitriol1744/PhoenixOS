@@ -1,0 +1,142 @@
+/*
+ * Created by vitriol1744 on 08.01.2023.
+ * Copyright (c) 2022-2023, Szymon Zemke <Vitriol1744@gmail.com>
+ *
+ * SPDX-License-Identifier: GPL-3
+ */
+#pragma once
+
+#include <limits>
+#include <memory>
+
+namespace std
+{
+    template <typename T, typename Allocator = std::allocator<T>>
+    class list
+    {
+      public:
+        using value_type      = T;
+        using allocator_type  = Allocator;
+        using size_type       = std::size_t;
+        using difference_type = std::ptrdiff_t;
+        using reference       = value_type&;
+        using const_reference = const value_type&;
+        using pointer = typename std::allocator_traits<Allocator>::pointer;
+        using const_pointer =
+            typename std::allocator_traits<Allocator>::const_pointer;
+        struct node
+        {
+            node(T val) { value = val; }
+
+            node*       previous = nullptr;
+            node*       next     = nullptr;
+            T           value;
+
+            friend auto operator<=>(const node& l, const node& r)
+            {
+                return static_cast<T>(l) <=> static_cast<T>(r);
+            }
+        };
+        struct iterator
+        {
+            node* it;
+            auto  operator++() { return it = it->next; }
+            auto  operator--() { return it = it->prev; }
+            friend bool operator==(iterator, iterator) = default;
+            auto& operator*() const { return it->value; }
+            auto& operator->() const { return &it->value; }
+        };
+        using const_iterator         = const iterator;
+        using reverse_iterator       = std::reverse_iterator<iterator>;
+        using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
+        const_reference            front() const { return _front->value; }
+        const_reference            back() const { return _back->value; }
+
+        constexpr iterator         begin() noexcept { return _front; }
+        constexpr const_iterator   begin() const noexcept { return _front; }
+        constexpr const_iterator   cbegin() const noexcept { return _front; }
+        constexpr iterator         end() noexcept { return nullptr; }
+        constexpr const_iterator   end() const noexcept { return nullptr; }
+        constexpr const_iterator   cend() const noexcept { return nullptr; }
+
+        constexpr reverse_iterator rbegin() noexcept
+        {
+            return reverse_iterator(nullptr);
+        }
+        constexpr const_reverse_iterator rbegin() const noexcept
+        {
+            return const_reverse_iterator(nullptr);
+        }
+        constexpr const_reverse_iterator crbegin() const noexcept
+        {
+            return const_reverse_iterator(nullptr);
+        }
+        constexpr reverse_iterator rend() noexcept
+        {
+            return reverse_iterator(_front);
+        }
+        constexpr const_reverse_iterator rend() const noexcept
+        {
+            return const_reverse_iterator(_front);
+        }
+        constexpr const_reverse_iterator crend() const noexcept
+        {
+            return const_reverse_iterator(_front);
+        }
+
+        void clear() noexcept
+        {
+            _size         = 0;
+            node* current = _front;
+            while (current)
+            {
+                node* to_delete = current;
+                current         = current->next;
+                delete to_delete;
+            }
+        }
+
+        void push_back(const T& value)
+        {
+            node* new_node = new node(value);
+            new_node->next = _front;
+            if (_back) _back->next = new_node;
+
+            _back = new_node;
+            ++_size;
+        }
+        void push_back(T&& value)
+        {
+            node* new_node = new node(value);
+            new_node->next = _front;
+            if (_back) _back->next = new_node;
+
+            _back = new_node;
+            ++_size;
+        }
+        void push_front(const T& value)
+        {
+            node* new_node = new node(value);
+            new_node->next = _front;
+            if (_front) _front->previous = new_node;
+
+            _front = new_node;
+            ++_size;
+        }
+        void push_front(T&& value)
+        {
+            node* new_node = new node(value);
+            new_node->next = _front;
+            if (_front) _front->previous = new_node;
+
+            _front = new_node;
+            ++_size;
+        }
+
+      private:
+        node*  _front = nullptr;
+        node*  _back  = nullptr;
+        size_t _size  = 0;
+    };
+} // namespace std

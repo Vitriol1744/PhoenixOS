@@ -1,0 +1,2021 @@
+/*
+ * Created by vitriol1744 on 06.01.2023.
+ * Copyright (c) 2022-2023, Szymon Zemke <Vitriol1744@gmail.com>
+ *
+ * SPDX-License-Identifier: GPL-3
+ */
+#pragma once
+
+#pragma GCC system_header
+
+#include <cassert>
+#include <concepts>
+#include <cstdlib>
+#include <details/string_view>
+#include <iterator>
+#include <memory>
+
+constexpr inline size_t hasher(const void* ptr, uint64_t len)
+{
+    return _hash(ptr, len);
+}
+
+#if __STDC_HOSTED__ == 1
+    #define PanicOrThrow(cond, exception_name, msg)                            \
+        if ((cond))                                                            \
+            ;                                                                  \
+        else throw exception_name(msg)
+#else
+    #define PanicOrThrow(cond, exception_name, msg)                            \
+        if ((cond))                                                            \
+            ;                                                                  \
+        else panic(msg)
+
+[[noreturn]]
+void panic(std::string_view msg);
+#endif
+
+namespace std
+{
+    namespace detail
+    {
+        struct uninitialized_size_tag
+        {
+        };
+
+        template <typename>
+        constexpr bool dependent_false = false;
+    } // namespace detail
+
+    template <typename CharT, typename Traits = char_traits<CharT>,
+              typename Allocator = allocator<CharT>>
+    class basic_string
+    {
+      public:
+        using traits_type    = Traits;
+        using value_type     = typename traits_type::char_type;
+        using allocator_type = Allocator;
+        using size_type = typename allocator_traits<allocator_type>::size_type;
+        using difference_type =
+            typename allocator_traits<allocator_type>::difference_type;
+        using reference       = typename allocator_type::reference;
+        using const_reference = typename allocator_type::const_reference;
+        using pointer = typename allocator_traits<allocator_type>::pointer;
+        using const_pointer =
+            typename allocator_traits<allocator_type>::const_pointer;
+        using iterator                  = value_type*;
+        using const_iterator            = const value_type*;
+        using reverse_iterator          = reverse_iterator<iterator>;
+        using const_reverse_iterator    = std::reverse_iterator<const_iterator>;
+
+        constexpr static size_type npos = size_type(-1);
+
+        explicit basic_string(detail::uninitialized_size_tag, size_type size,
+                              const allocator_type& alloc)
+            : _allocator(alloc)
+        {
+            _storage.initialize(size, _allocator);
+        }
+        constexpr basic_string() noexcept(noexcept(allocator_type()))
+            : basic_string(allocator_type())
+        {
+        }
+        explicit constexpr basic_string(const allocator_type& alloc) noexcept
+            : _allocator(alloc)
+        {
+            _storage.short_init(_allocator);
+        }
+
+        constexpr basic_string(size_type count, value_type ch,
+                               const allocator_type& alloc = allocator_type())
+            : _allocator(alloc)
+        {
+            internal_assign(ch, count);
+        }
+
+        constexpr basic_string(const basic_string& other, size_type pos,
+                               size_type             count,
+                               const allocator_type& alloc = allocator_type())
+            : _allocator(alloc)
+        {
+            PanicOrThrow(pos <= other.size(), std::out_of_range,
+                         "String::OutOfRange");
+
+            auto len = min(count, other.size() - pos);
+
+            internal_assign(other.data(), len);
+        }
+        constexpr basic_string(const basic_string& other, size_type pos,
+                               const allocator_type& alloc = allocator_type())
+            : basic_string(other, pos, npos, alloc)
+        {
+        }
+
+        constexpr basic_string(const value_type* str, size_type count,
+                               const allocator_type& alloc = allocator_type())
+            : _allocator(alloc)
+        {
+            internal_assign(str, count);
+        }
+        constexpr basic_string(const value_type*     str,
+                               const allocator_type& alloc = allocator_type())
+            : basic_string(str, Traits::length(str), alloc)
+        {
+        }
+
+        template <typename InputIterator>
+        constexpr basic_string(InputIterator first, InputIterator last,
+                               const allocator_type& alloc = allocator_type())
+            : _allocator(alloc)
+        {
+            auto len = distance(first, last);
+            internal_assign(const_pointer(first), len);
+        }
+
+        constexpr basic_string(const basic_string& other)
+            : basic_string(other, allocator_type())
+        {
+        }
+
+        constexpr basic_string(const basic_string&   other,
+                               const allocator_type& alloc)
+        {
+            auto len = other.length();
+            internal_assign(other.data(), len);
+        }
+        constexpr basic_string(basic_string&& other) noexcept
+            : basic_string(other, move(other._allocator))
+        {
+        }
+
+        constexpr basic_string(basic_string&&        other,
+                               const allocator_type& alloc)
+            : _allocator(alloc)
+            , _storage(move(other._storage))
+        {
+            if (other._storage.is_long() && alloc != other._allocator)
+            {
+                auto len = other._storage._long.size;
+                internal_assign(other._storage._long.data, len);
+            }
+            else
+            {
+                _storage = other._storage;
+                other._storage.short_init(other._allocator);
+            }
+        }
+
+        constexpr basic_string(initializer_list<value_type> ilist,
+                               const allocator_type& alloc = allocator_type())
+            : _allocator(alloc)
+        {
+            auto len = ilist.size();
+            internal_assign(const_pointer(ilist.begin()), len);
+        }
+
+        template <typename StringViewLike>
+        explicit constexpr basic_string(const StringViewLike& t,
+                                        const allocator_type& alloc
+                                        = allocator_type())
+            : _allocator(alloc)
+        {
+            basic_string_view<value_type, traits_type> sv(t);
+            auto                                       len = sv.length();
+
+            internal_assign(sv.data(), len);
+        }
+        template <typename StringViewLike>
+        constexpr basic_string(const StringViewLike& t, size_type pos,
+                               size_type             n,
+                               const allocator_type& alloc = allocator_type())
+            : _allocator(alloc)
+        {
+            PanicOrThrow(pos <= t.size(), out_of_range, "String::OutOfRange");
+            auto sv
+                = basic_string_view<value_type, traits_type>(t).substr(pos, n);
+            auto len = sv.length();
+
+            internal_assign(sv.data(), len);
+        }
+
+        constexpr ~basic_string()
+        {
+            if (_storage.is_long())
+                if (auto& buffer = _storage._long.data; buffer)
+                    _allocator.deallocate(buffer, _storage._long.capacity + 1);
+        }
+
+        constexpr basic_string& operator=(const basic_string& str)
+        {
+            return assign(str);
+        }
+
+        constexpr basic_string& operator=(basic_string&& str) noexcept(
+            allocator_traits<
+                Allocator>::propagate_on_container_move_assignment::value
+            || allocator_traits<Allocator>::is_always_equal::value)
+        {
+            return assign(str);
+        }
+
+        constexpr basic_string& operator=(const value_type* str)
+        {
+            return assign(str, Traits::length(str));
+        }
+
+        constexpr basic_string& operator=(value_type ch)
+        {
+            return assign(addressof(ch), 1);
+        }
+
+        constexpr basic_string& operator=(initializer_list<value_type> ilist)
+        {
+            return assign(ilist.begin(), ilist.size());
+        }
+
+        template <typename T>
+            requires(is_convertible_v<
+                         const T&, basic_string_view<value_type, traits_type>>
+                     && !is_convertible_v<const T&, const CharT*>)
+        constexpr basic_string& operator=(const T& t)
+        {
+            basic_string_view<value_type, traits_type> sv(t);
+            return assign(sv);
+        }
+
+        constexpr basic_string& operator=(nullptr_t) = delete;
+
+        constexpr basic_string& assign(size_type count, value_type ch)
+        {
+            internal_assign(ch, count);
+            return *this;
+        }
+
+        constexpr basic_string& assign(const basic_string& str)
+        {
+            internal_assign(str.data(), str.size());
+            return *this;
+        }
+
+        constexpr basic_string& assign(const basic_string& str, size_type pos,
+                                       size_type count = npos)
+        {
+            assert(pos <= str.size());
+            internal_assign(str.data(), min(count, str.size() - pos));
+            return *this;
+        }
+
+        constexpr basic_string& assign(basic_string&& str) noexcept(
+            allocator_traits<
+                Allocator>::propagate_on_container_move_assignment::value
+            || allocator_traits<Allocator>::is_always_equal::value)
+        {
+            if (_allocator == str._allocator) swap(str);
+            else internal_assign(str.data(), str.size());
+
+            return *this;
+        }
+
+        constexpr basic_string& assign(const value_type* str, size_type count)
+        {
+            internal_assign(str, count);
+            return *this;
+        }
+
+        constexpr basic_string& assign(const value_type* str)
+        {
+            return assign(str, Traits::length(str));
+        }
+
+        template <typename InputIterator>
+        constexpr basic_string& assign(InputIterator first, InputIterator last)
+        {
+            auto len = distance(first, last);
+
+            internal_assign(const_pointer(first), len);
+            return *this;
+        }
+
+        constexpr basic_string& assign(initializer_list<value_type> ilist)
+        {
+            internal_assign(const_pointer(ilist.begin()), ilist.size());
+            return *this;
+        }
+
+        template <typename T>
+            requires(is_convertible_v<
+                         const T&, basic_string_view<value_type, traits_type>>
+                     && !is_convertible_v<const T&, const CharT*>)
+        constexpr basic_string& assign(const T& t)
+        {
+            basic_string_view<value_type, traits_type> sv(t);
+            return assign(sv.data(), sv.length());
+        }
+
+        template <typename T>
+            requires(is_convertible_v<
+                         const T&, basic_string_view<value_type, traits_type>>
+                     && !is_convertible_v<const T&, const CharT*>)
+        constexpr basic_string& assign(const T& t, size_type pos,
+                                       size_type count = npos)
+        {
+            auto sv = basic_string_view<value_type, traits_type>(t).substr(
+                pos, count);
+            return assign(sv.data(), sv.length());
+        }
+
+        constexpr allocator_type get_allocator() const noexcept
+        {
+            return _allocator;
+        }
+
+        constexpr reference operator[](size_type pos) { return data()[pos]; }
+
+        constexpr const_reference operator[](size_type pos) const
+        {
+            return data()[pos];
+        }
+
+        constexpr reference at(size_type pos)
+        {
+            assert(pos < size());
+            return data()[pos];
+        }
+
+        constexpr const_reference at(size_type pos) const
+        {
+            assert(pos < size());
+            return data()[pos];
+        }
+
+        constexpr reference         front() { return data()[0]; }
+
+        constexpr const_reference   front() const { return data()[0]; }
+
+        constexpr reference         back() { return data()[size() - 1]; }
+
+        constexpr const_reference   back() const { return data()[size() - 1]; }
+
+        constexpr const value_type* data() const noexcept
+        {
+            return _storage.data();
+        }
+
+        constexpr value_type*       data() noexcept { return _storage.data(); }
+
+        constexpr const value_type* c_str() const noexcept { return data(); }
+
+        constexpr
+        operator basic_string_view<value_type, traits_type>() const noexcept
+        {
+            return view_type(data(), size());
+        }
+
+        constexpr iterator       begin() noexcept { return data(); }
+
+        constexpr const_iterator begin() const noexcept { return data(); }
+
+        constexpr const_iterator cbegin() const noexcept { return data(); }
+
+        constexpr iterator       end() noexcept { return data() + size(); }
+
+        constexpr const_iterator end() const noexcept
+        {
+            return data() + size();
+        }
+
+        constexpr const_iterator cend() const noexcept
+        {
+            return data() + size();
+        }
+
+        constexpr reverse_iterator rbegin() noexcept
+        {
+            return reverse_iterator(end());
+        }
+
+        constexpr const_reverse_iterator rbegin() const noexcept
+        {
+            return const_reverse_iterator(end());
+        }
+
+        constexpr const_reverse_iterator crbegin() const noexcept
+        {
+            return const_reverse_iterator(cend());
+        }
+
+        constexpr reverse_iterator rend() noexcept
+        {
+            return reverse_iterator(begin());
+        }
+
+        constexpr const_reverse_iterator rend() const noexcept
+        {
+            return const_reverse_iterator(begin());
+        }
+
+        constexpr const_reverse_iterator crend() const noexcept
+        {
+            return const_reverse_iterator(cbegin());
+        }
+
+        constexpr bool      empty() const noexcept { return size() == 0; }
+
+        constexpr size_type size() const noexcept { return _storage.size(); }
+        constexpr size_type length() const noexcept { return size(); }
+
+        constexpr size_type max_size() const noexcept
+        {
+            // size_type m = alloc_traits::max_size(_allocator);
+
+            // if (m <= numeric_limits<size_type>::max() / 2)
+            //     return m - alignment;
+            // else
+            //     return (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__) ? m -
+            //     alignment : (m / 2) - alignment;
+            return (allocator_traits<allocator_type>::max_size(allocator_type())
+                    - 1)
+                 / 2;
+        }
+
+        constexpr void reserve(size_type cap)
+        {
+            if (cap <= capacity()) return;
+
+            auto new_cap = max(cap, size());
+            if (new_cap == capacity()) return;
+
+            grow_to(new_cap);
+        }
+
+        [[deprecated]]
+        void reserve()
+        {
+            shrink_to_fit();
+        }
+
+        constexpr size_type capacity() const noexcept
+        {
+            return _storage.capacity();
+        }
+
+        constexpr void shrink_to_fit()
+        {
+            if (!_storage.is_long()) return;
+
+            reallocate(size(), true);
+        }
+
+        constexpr void          clear() noexcept { _storage.set_size(0); }
+
+        constexpr basic_string& insert(size_type pos, size_type count,
+                                       value_type ch)
+        {
+            assert(pos <= length());
+            insert(next(cbegin(), pos), count, ch);
+            return *this;
+        }
+
+        constexpr basic_string& insert(size_type pos, const value_type* str)
+        {
+            assert(pos <= length());
+            internal_insert(pos, str, Traits::length(str));
+            return *this;
+        }
+
+        constexpr basic_string& insert(size_type pos, const value_type* str,
+                                       size_type count)
+        {
+            assert(pos <= length());
+            internal_insert(pos, str, count);
+            return *this;
+        }
+
+        constexpr basic_string& insert(size_type pos, const basic_string& str)
+        {
+            assert(pos <= length());
+            internal_insert(pos, const_pointer(str.data()), str.length());
+            return *this;
+        }
+
+        constexpr basic_string& insert(size_type pos, const basic_string& str,
+                                       size_type pos_str,
+                                       size_type count = npos)
+        {
+            assert(pos <= length() && pos_str <= str.length());
+            count = min(count, str.length() - pos_str);
+            return insert(pos, str.data() + pos_str, count);
+        }
+
+        constexpr iterator insert(const_iterator pos, value_type ch)
+        {
+            return insert(pos, 1, ch);
+        }
+
+        constexpr iterator insert(const_iterator pos, size_type count,
+                                  value_type ch)
+        {
+            auto spos = distance(cbegin(), pos);
+            internal_insert(spos, ch, count);
+            return next(begin(), spos);
+        }
+
+        template <typename InputIterator>
+        constexpr iterator insert(const_iterator pos, InputIterator first,
+                                  InputIterator last)
+        {
+            auto spos = distance(cbegin(), pos);
+            auto len  = distance(first, last);
+            internal_insert(spos, const_pointer(first), len);
+            return next(begin(), spos);
+        }
+
+        constexpr iterator insert(const_iterator               pos,
+                                  initializer_list<value_type> ilist)
+        {
+            auto spos = distance(cbegin(), pos);
+            internal_insert(spos, const_pointer(ilist.begin()), ilist.size());
+            return next(begin(), spos);
+        }
+
+        template <typename T>
+            requires(is_convertible_v<
+                         const T&, basic_string_view<value_type, traits_type>>
+                     && !is_convertible_v<const T&, const CharT*>)
+        constexpr basic_string& insert(size_type pos, const T& t)
+        {
+            assert(pos <= length());
+            basic_string_view<value_type, traits_type> sv(t);
+            internal_insert(pos, const_pointer(sv.data()), sv.length());
+            return *this;
+        }
+
+        template <typename T>
+            requires(is_convertible_v<
+                         const T&, basic_string_view<value_type, traits_type>>
+                     && !is_convertible_v<const T&, const CharT*>)
+        constexpr basic_string& insert(size_type pos, const T& t,
+                                       size_type pos_str,
+                                       size_type count = npos)
+        {
+            assert(pos <= length());
+            auto sv = basic_string_view<value_type, traits_type>(t).substr(
+                pos_str, count);
+            internal_insert(pos, const_pointer(sv.data()), sv.length());
+            return *this;
+        }
+
+        constexpr basic_string& erase(size_type pos = 0, size_type count = npos)
+        {
+            auto sz     = size();
+            auto buffer = data();
+
+            assert(pos <= sz);
+            count     = min(count, sz - pos);
+
+            auto left = sz - (pos + count);
+            if (left != 0)
+                Traits::move(buffer + pos, buffer + pos + count, left);
+
+            auto new_size = pos + left;
+            _storage.set_size(new_size);
+            null_terminate();
+
+            return *this;
+        }
+
+        constexpr iterator erase(const_iterator position)
+        {
+            auto pos = distance(cbegin(), position);
+            erase(pos, 1);
+            return begin() + pos;
+        }
+
+        constexpr iterator erase(const_iterator first, const_iterator last)
+        {
+            auto pos = distance(cbegin(), first);
+            auto len = distance(first, last);
+            erase(pos, len);
+            return begin() + pos;
+        }
+
+        constexpr void          push_back(value_type ch) { append(1, ch); }
+
+        constexpr void          pop_back() { erase(end() - 1); }
+
+        constexpr basic_string& append(size_type count, value_type ch)
+        {
+            internal_append(ch, count);
+            return *this;
+        }
+
+        constexpr basic_string& append(const basic_string& str)
+        {
+            internal_append(str.data(), str.get_size());
+            return *this;
+        }
+
+        constexpr basic_string& append(const basic_string& str, size_type pos,
+                                       size_type count = npos)
+        {
+            auto sz = str.size();
+            assert(pos <= sz);
+            internal_append(str.data() + pos, min(count, sz - pos));
+            return *this;
+        }
+
+        constexpr basic_string& append(const value_type* str, size_type count)
+        {
+            internal_append(str, count);
+            return *this;
+        }
+
+        constexpr basic_string& append(const value_type* str)
+        {
+            return append(str, Traits::length(str));
+        }
+
+        template <typename InputIterator>
+        constexpr basic_string& append(InputIterator first, InputIterator last)
+        {
+            auto len = distance(first, last);
+            internal_append(const_pointer(first), len);
+            return *this;
+        }
+
+        constexpr basic_string& append(initializer_list<value_type> ilist)
+        {
+            internal_append(const_pointer(ilist.begin()), ilist.size());
+            return *this;
+        }
+
+        template <typename T>
+            requires(is_convertible_v<
+                         const T&, basic_string_view<value_type, traits_type>>
+                     && !is_convertible_v<const T&, const CharT*>)
+        constexpr basic_string& append(const T& t)
+        {
+            basic_string_view<value_type, traits_type> sv(t);
+            internal_append(sv.data(), sv.size());
+            return *this;
+        }
+
+        template <typename T>
+            requires(is_convertible_v<
+                         const T&, basic_string_view<value_type, traits_type>>
+                     && !is_convertible_v<const T&, const CharT*>)
+        constexpr basic_string& append(const T& t, size_type pos,
+                                       size_type count = npos)
+        {
+            basic_string_view<value_type, traits_type> sv(t);
+            assert(pos < sv.size());
+            internal_append(sv.data(), min(count, sv.size() - pos));
+            return *this;
+        }
+
+        constexpr basic_string& operator+=(const basic_string& str)
+        {
+            return append(str);
+        }
+
+        constexpr basic_string& operator+=(value_type ch)
+        {
+            push_back(ch);
+            return *this;
+        }
+
+        constexpr basic_string& operator+=(const value_type* str)
+        {
+            return append(str);
+        }
+
+        constexpr basic_string& operator+=(initializer_list<value_type> ilist)
+        {
+            return append(ilist);
+        }
+
+        template <typename T>
+            requires(is_convertible_v<
+                         const T&, basic_string_view<value_type, traits_type>>
+                     && !is_convertible_v<const T&, const CharT*>)
+        constexpr basic_string& operator+=(const T& t)
+        {
+            return append(basic_string_view<value_type, traits_type>(t));
+        }
+
+        constexpr int compare(const basic_string& str) const noexcept
+        {
+            return view_type(data(), size()).compare(view_type(str));
+        }
+
+        constexpr int compare(size_type pos1, size_type count1,
+                              const basic_string& str) const
+        {
+            return view_type(data(), size())
+                .compare(pos1, count1, view_type(str));
+        }
+
+        constexpr int compare(size_type pos1, size_type count1,
+                              const basic_string& str, size_type pos2,
+                              size_type count2 = npos) const
+        {
+            return view_type(data(), size())
+                .compare(pos1, count1, str.view_type(data(), size()), pos2,
+                         count2);
+        }
+
+        constexpr int compare(const value_type* str) const
+        {
+            return view_type(data(), size()).compare(str);
+        }
+
+        constexpr int compare(size_type pos1, size_type count1,
+                              const value_type* str) const
+        {
+            return view_type(data(), size()).compare(pos1, count1, str);
+        }
+
+        constexpr int compare(size_type pos1, size_type count1,
+                              const value_type* str, size_type count2) const
+        {
+            return view_type(data(), size()).compare(pos1, count1, str, count2);
+        }
+
+        template <typename T>
+            requires(is_convertible_v<
+                         const T&, basic_string_view<value_type, traits_type>>
+                     && !is_convertible_v<const T&, const CharT*>)
+        constexpr int compare(const T& t) const noexcept(
+            noexcept(is_nothrow_convertible_v<
+                     const T&, basic_string_view<value_type, traits_type>>))
+        {
+            return view_type(data(), size())
+                .compare(basic_string_view<value_type, traits_type>(t));
+        }
+
+        template <typename T>
+            requires(is_convertible_v<
+                         const T&, basic_string_view<value_type, traits_type>>
+                     && !is_convertible_v<const T&, const CharT*>)
+        constexpr int compare(size_type pos1, size_type count1,
+                              const T& t) const
+        {
+            return view_type(data(), size())
+                .compare(pos1, count1,
+                         basic_string_view<value_type, traits_type>(t));
+        }
+
+        template <typename T>
+            requires(is_convertible_v<
+                         const T&, basic_string_view<value_type, traits_type>>
+                     && !is_convertible_v<const T&, const CharT*>)
+        constexpr int compare(size_type pos1, size_type count1, const T& t,
+                              size_type pos2, size_type count2 = npos) const
+        {
+            return view_type(data(), size())
+                .compare(pos1, count1,
+                         basic_string_view<value_type, traits_type>(t), pos2,
+                         count2);
+        }
+
+        constexpr bool starts_with(
+            basic_string_view<value_type, traits_type> sv) const noexcept
+        {
+            return view_type(data(), size()).starts_with(sv);
+        }
+
+        constexpr bool starts_with(CharT ch) const noexcept
+        {
+            return view_type(data(), size()).starts_with(ch);
+        }
+
+        constexpr bool starts_with(const CharT* str) const
+        {
+            return view_type(data(), size()).starts_with(str);
+        }
+
+        constexpr bool
+        ends_with(basic_string_view<value_type, traits_type> sv) const noexcept
+        {
+            return view_type(data(), size()).ends_with(sv);
+        }
+
+        constexpr bool ends_with(CharT ch) const noexcept
+        {
+            return view_type(data(), size()).ends_with(ch);
+        }
+
+        constexpr bool ends_with(const CharT* str) const
+        {
+            return view_type(data(), size()).ends_with(str);
+        }
+
+        constexpr bool
+        contains(basic_string_view<value_type, traits_type> sv) const noexcept
+        {
+            return view_type(data(), size()).contains(sv);
+        }
+
+        constexpr bool contains(CharT ch) const noexcept
+        {
+            return view_type(data(), size()).contains(ch);
+        }
+
+        constexpr bool contains(const CharT* str) const
+        {
+            return view_type(data(), size()).contains(str);
+        }
+
+        constexpr basic_string& replace(size_type pos, size_type count,
+                                        const basic_string& str)
+        {
+            return replace(pos, count, str, 0, str.length());
+        }
+
+        constexpr basic_string& replace(const_iterator      first,
+                                        const_iterator      last,
+                                        const basic_string& str)
+        {
+            auto pos   = distance(cbegin(), first);
+            auto count = distance(first, last);
+            return replace(pos, count, str, 0, str.length());
+        }
+
+        constexpr basic_string& replace(size_type pos, size_type count,
+                                        const basic_string& str, size_type pos2,
+                                        size_type count2 = npos)
+        {
+            assert(pos <= length() && pos2 <= str.length());
+            count2 = min(count2, str.length() - pos2);
+            return replace(pos, count, str.data() + pos2, count2);
+        }
+
+        template <typename InputIterator>
+        constexpr basic_string&
+        replace(const_iterator first, const_iterator last, InputIterator first2,
+                InputIterator last2)
+        {
+            return replace(first, last, const_pointer(first2),
+                           distance(first2, last2));
+        }
+
+        constexpr basic_string& replace(size_type pos, size_type count,
+                                        const value_type* str, size_type count2)
+        {
+            assert(pos <= length());
+            count = min(count, length() - pos);
+            internal_replace(pos, const_pointer(str), count, count2);
+            return *this;
+        }
+
+        constexpr basic_string& replace(const_iterator    first,
+                                        const_iterator    last,
+                                        const value_type* str, size_type count2)
+        {
+            size_type pos   = distance(cbegin(), first);
+            size_type count = distance(first, last);
+
+            return replace(pos, count, str, count2);
+        }
+
+        constexpr basic_string& replace(size_type pos, size_type count,
+                                        const value_type* str)
+        {
+            return replace(pos, count, str, Traits::length(str));
+        }
+
+        constexpr basic_string& replace(const_iterator    first,
+                                        const_iterator    last,
+                                        const value_type* str)
+        {
+            return replace(first, last, str, Traits::length(str));
+        }
+
+        constexpr basic_string& replace(size_type pos, size_type count,
+                                        size_type count2, value_type ch)
+        {
+            assert(pos <= length());
+            count = min(count, length() - pos);
+            internal_replace(pos, ch, count, count2);
+            return *this;
+        }
+
+        constexpr basic_string& replace(const_iterator first,
+                                        const_iterator last, size_type count2,
+                                        value_type ch)
+        {
+            auto pos   = distance(cbegin(), first);
+            auto count = distance(first, last);
+
+            assert(pos <= length());
+            internal_replace(pos, ch, count, count2);
+            return *this;
+        }
+
+        constexpr basic_string& replace(const_iterator               first,
+                                        const_iterator               last,
+                                        initializer_list<value_type> ilist)
+        {
+            return replace(first, last, const_pointer(ilist.begin()),
+                           ilist.size());
+        }
+
+        template <typename T>
+            requires(is_convertible_v<
+                         const T&, basic_string_view<value_type, traits_type>>
+                     && !is_convertible_v<const T&, const CharT*>)
+        constexpr basic_string& replace(size_type pos, size_type count,
+                                        const T& t)
+        {
+            basic_string_view<value_type, traits_type> sv(t);
+            return replace(pos, count, sv.data(), sv.length());
+        }
+
+        template <typename T>
+            requires(is_convertible_v<
+                         const T&, basic_string_view<value_type, traits_type>>
+                     && !is_convertible_v<const T&, const CharT*>)
+        constexpr basic_string& replace(const_iterator first,
+                                        const_iterator last, const T& t)
+        {
+            basic_string_view<value_type, traits_type> sv(t);
+            return replace(first, last, sv.data(), sv.length());
+        }
+
+        template <typename T>
+            requires(is_convertible_v<
+                         const T&, basic_string_view<value_type, traits_type>>
+                     && !is_convertible_v<const T&, const CharT*>)
+        constexpr basic_string& replace(size_type pos, size_type count,
+                                        const T& t, size_type pos2,
+                                        size_type count2 = npos)
+        {
+            auto sv = basic_string_view<value_type, traits_type>(t).substr(
+                pos2, count2);
+            return replace(pos, count, sv.data(), sv.length());
+        }
+
+        constexpr basic_string substr(size_type pos   = 0,
+                                      size_type count = npos) const
+        {
+            return basic_string(*this, pos, count);
+        }
+
+        constexpr size_type copy(value_type* str, size_type count,
+                                 size_type pos = 0) const
+        {
+            return view_type(data(), size()).copy(str, count, pos);
+        }
+
+        constexpr void resize(size_type count, value_type ch)
+        {
+            auto cap = capacity();
+            auto sz  = size();
+            auto rsz = count + sz;
+
+            if (sz < rsz)
+            {
+                if (cap < rsz) grow_to(rsz);
+                Traits::assign(data() + sz, count, ch);
+            }
+            _storage.set_size(rsz);
+            null_terminate();
+        }
+
+        constexpr void resize(size_type count) { resize(count, _terminator); }
+
+        template <typename Operation>
+        constexpr void resize_and_overwrite(size_type count, Operation op)
+        {
+            static_assert(detail::dependent_false<CharT>,
+                          "std::basic_string::resize_and_overwrite(count, op) "
+                          "not implemented!");
+        }
+
+        constexpr void swap(basic_string& str) noexcept(
+            allocator_traits<allocator_type>::propagate_on_container_swap::value
+            || allocator_traits<allocator_type>::is_always_equal::value)
+        {
+            using std::swap;
+            swap(_storage, str._storage);
+            swap(_allocator, str._allocator);
+        }
+
+        constexpr size_type find(const basic_string& str,
+                                 size_type           pos = 0) const noexcept
+        {
+            return view_type(data(), size())
+                .find(basic_string_view<value_type, traits_type>(str), pos);
+        }
+
+        constexpr size_type find(const value_type* str, size_type pos,
+                                 size_type count) const noexcept
+        {
+            return view_type(data(), size()).find(str, pos, count);
+        }
+
+        constexpr size_type find(const value_type* str,
+                                 size_type         pos = 0) const noexcept
+        {
+            return view_type(data(), size()).find(str, pos);
+        }
+
+        constexpr size_type find(value_type ch,
+                                 size_type  pos = 0) const noexcept
+        {
+            return view_type(data(), size()).find(ch, pos);
+        }
+
+        template <typename T>
+            requires(is_convertible_v<
+                         const T&, basic_string_view<value_type, traits_type>>
+                     && !is_convertible_v<const T&, const CharT*>)
+        constexpr size_type find(const T& t, size_type pos = 0) const
+            noexcept(is_nothrow_convertible_v<
+                     const T&, basic_string_view<value_type, traits_type>>)
+        {
+            return view_type(data(), size())
+                .find(basic_string_view<value_type, traits_type>(t), pos);
+        }
+
+        constexpr size_type rfind(const basic_string& str,
+                                  size_type           pos = npos) const noexcept
+        {
+            return view_type(data(), size())
+                .rfind(basic_string_view<value_type, traits_type>(str), pos);
+        }
+
+        constexpr size_type rfind(const value_type* str, size_type pos,
+                                  size_type count) const noexcept
+        {
+            return view_type(data(), size()).rfind(str, pos, count);
+        }
+
+        constexpr size_type rfind(const value_type* str,
+                                  size_type         pos = npos) const noexcept
+        {
+            return view_type(data(), size()).rfind(str, pos);
+        }
+
+        constexpr size_type rfind(value_type ch,
+                                  size_type  pos = npos) const noexcept
+        {
+            return view_type(data(), size()).rfind(ch, pos);
+        }
+
+        template <typename T>
+            requires(is_convertible_v<
+                         const T&, basic_string_view<value_type, traits_type>>
+                     && !is_convertible_v<const T&, const CharT*>)
+        constexpr size_type rfind(const T& t, size_type pos = npos) const
+            noexcept(is_nothrow_convertible_v<
+                     const T&, basic_string_view<value_type, traits_type>>)
+        {
+            return view_type(data(), size())
+                .rfind(basic_string_view<value_type, traits_type>(t), pos);
+        }
+
+        constexpr size_type find_first_of(const basic_string& str,
+                                          size_type pos = 0) const noexcept
+        {
+            return view_type(data(), size())
+                .find_first_of(basic_string_view<value_type, traits_type>(str),
+                               pos);
+        }
+
+        constexpr size_type find_first_of(const value_type* str, size_type pos,
+                                          size_type count) const noexcept
+        {
+            return view_type(data(), size()).find_first_of(str, pos, count);
+        }
+
+        constexpr size_type find_first_of(const value_type* str,
+                                          size_type pos = 0) const noexcept
+        {
+            return view_type(data(), size()).find_first_of(str, pos);
+        }
+
+        constexpr size_type find_first_of(value_type ch,
+                                          size_type  pos = 0) const noexcept
+        {
+            return view_type(data(), size()).find_first_of(ch, pos);
+        }
+
+        template <typename T>
+            requires(is_convertible_v<
+                         const T&, basic_string_view<value_type, traits_type>>
+                     && !is_convertible_v<const T&, const CharT*>)
+        constexpr size_type find_first_of(const T& t, size_type pos = 0) const
+            noexcept(is_nothrow_convertible_v<
+                     const T&, basic_string_view<value_type, traits_type>>)
+        {
+            return view_type(data(), size())
+                .find_first_of(basic_string_view<value_type, traits_type>(t),
+                               pos);
+        }
+
+        constexpr size_type find_first_not_of(const basic_string& str,
+                                              size_type pos = 0) const noexcept
+        {
+            return view_type(data(), size())
+                .find_last_not_of(
+                    basic_string_view<value_type, traits_type>(str), pos);
+        }
+
+        constexpr size_type find_first_not_of(const value_type* str,
+                                              size_type         pos,
+                                              size_type count) const noexcept
+        {
+            return view_type(data(), size()).find_last_not_of(str, pos, count);
+        }
+
+        constexpr size_type find_first_not_of(const value_type* str,
+                                              size_type pos = 0) const noexcept
+        {
+            return view_type(data(), size()).find_last_not_of(str, pos);
+        }
+
+        constexpr size_type find_first_not_of(value_type ch,
+                                              size_type  pos = 0) const noexcept
+        {
+            return view_type(data(), size()).find_first_not_of(ch, pos);
+        }
+
+        template <typename T>
+            requires(is_convertible_v<
+                         const T&, basic_string_view<value_type, traits_type>>
+                     && !is_convertible_v<const T&, const CharT*>)
+        constexpr size_type find_first_not_of(const T&  t,
+                                              size_type pos = 0) const
+            noexcept(is_nothrow_convertible_v<
+                     const T&, basic_string_view<value_type, traits_type>>)
+        {
+            return view_type(data(), size())
+                .find_first_not_of(
+                    basic_string_view<value_type, traits_type>(t), pos);
+        }
+
+        constexpr size_type find_last_of(const basic_string& str,
+                                         size_type pos = npos) const noexcept
+        {
+            return view_type(data(), size())
+                .find_last_of(basic_string_view<value_type, traits_type>(str),
+                              pos);
+        }
+
+        constexpr size_type find_last_of(const value_type* str, size_type pos,
+                                         size_type count) const noexcept
+        {
+            return view_type(data(), size()).find_last_of(str, pos, count);
+        }
+
+        constexpr size_type find_last_of(const value_type* str,
+                                         size_type pos = npos) const noexcept
+        {
+            return view_type(data(), size()).find_last_of(str, pos);
+        }
+
+        constexpr size_type find_last_of(value_type ch,
+                                         size_type  pos = npos) const noexcept
+        {
+            return view_type(data(), size()).find_last_of(ch, pos);
+        }
+
+        template <typename T>
+            requires(is_convertible_v<
+                         const T&, basic_string_view<value_type, traits_type>>
+                     && !is_convertible_v<const T&, const CharT*>)
+        constexpr size_type find_last_of(const T& t, size_type pos = npos) const
+            noexcept(is_nothrow_convertible_v<
+                     const T&, basic_string_view<value_type, traits_type>>)
+        {
+            return view_type(data(), size())
+                .find_last_of(basic_string_view<value_type, traits_type>(t),
+                              pos);
+        }
+
+        constexpr size_type find_last_not_of(const basic_string& str,
+                                             size_type           pos
+                                             = npos) const noexcept
+        {
+            return view_type(data(), size())
+                .find_last_not_of(
+                    basic_string_view<value_type, traits_type>(str), pos);
+        }
+
+        constexpr size_type find_last_not_of(const value_type* str,
+                                             size_type         pos,
+                                             size_type count) const noexcept
+        {
+            return view_type(data(), size()).find_last_not_of(str, pos, count);
+        }
+
+        constexpr size_type find_last_not_of(const value_type* str,
+                                             size_type         pos
+                                             = npos) const noexcept
+        {
+            return view_type(data(), size()).find_last_not_of(str, pos);
+        }
+
+        constexpr size_type
+        find_last_not_of(value_type ch, size_type pos = npos) const noexcept
+        {
+            return view_type(data(), size()).find_last_not_of(ch, pos);
+        }
+
+        template <typename T>
+            requires(is_convertible_v<
+                         const T&, basic_string_view<value_type, traits_type>>
+                     && !is_convertible_v<const T&, const CharT*>)
+        constexpr size_type find_last_not_of(const T&  t,
+                                             size_type pos = npos) const
+            noexcept(is_nothrow_convertible_v<
+                     const T&, basic_string_view<value_type, traits_type>>)
+        {
+            return view_type(data(), size())
+                .find_last_not_of(basic_string_view<value_type, traits_type>(t),
+                                  pos);
+        }
+
+        friend constexpr basic_string operator+(const basic_string& lhs,
+                                                const basic_string& rhs)
+        {
+            auto         lhs_sz = lhs.size();
+            auto         rhs_sz = rhs.size();
+            basic_string ret(
+                detail::uninitialized_size_tag(), lhs_sz + rhs_sz,
+                allocator_traits<basic_string::allocator_type>::
+                    select_on_container_copy_construction(lhs.get_allocator()));
+            auto buffer = ret.data();
+            Traits::copy(buffer, lhs.data(), lhs_sz);
+            Traits::copy(buffer + lhs_sz, rhs.data(), rhs_sz);
+            ret.null_terminate();
+            return ret;
+        }
+
+        friend constexpr basic_string operator+(basic_string&&      lhs,
+                                                const basic_string& rhs)
+        {
+            return move(lhs.append(rhs));
+        }
+
+        friend constexpr basic_string operator+(const basic_string& lhs,
+                                                basic_string&&      rhs)
+        {
+            return move(rhs.insert(0, lhs));
+        }
+
+        friend constexpr basic_string operator+(basic_string&& lhs,
+                                                basic_string&& rhs)
+        {
+            return move(lhs.append(rhs));
+        }
+
+        friend constexpr basic_string operator+(const CharT*        lhs,
+                                                const basic_string& rhs)
+        {
+            auto         lhs_sz = Traits::length(lhs);
+            auto         rhs_sz = rhs.size();
+            basic_string ret(
+                detail::uninitialized_size_tag(), lhs_sz + rhs_sz,
+                allocator_traits<basic_string::allocator_type>::
+                    select_on_container_copy_construction(rhs.get_allocator()));
+            auto buffer = ret.data();
+            Traits::copy(buffer, lhs, lhs_sz);
+            Traits::copy(buffer + lhs_sz, rhs.data(), rhs_sz);
+            ret.null_terminate();
+            return ret;
+        }
+
+        friend constexpr basic_string operator+(const CharT*   lhs,
+                                                basic_string&& rhs)
+        {
+            return move(rhs.insert(0, lhs));
+        }
+
+        friend constexpr basic_string operator+(CharT               lhs,
+                                                const basic_string& rhs)
+        {
+            auto         rhs_sz = rhs.size();
+            basic_string ret(
+                detail::uninitialized_size_tag(), rhs_sz + 1,
+                allocator_traits<basic_string::allocator_type>::
+                    select_on_container_copy_construction(rhs.get_allocator()));
+            auto buffer = ret.data();
+            Traits::assign(buffer, 1, lhs);
+            Traits::copy(buffer + 1, rhs.data(), rhs_sz);
+            ret.null_terminate();
+            return ret;
+        }
+
+        friend constexpr basic_string operator+(CharT lhs, basic_string&& rhs)
+        {
+            rhs.insert(rhs.begin(), lhs);
+            return move(rhs);
+        }
+
+        friend constexpr basic_string operator+(const basic_string& lhs,
+                                                const CharT*        rhs)
+        {
+            auto         lhs_sz = lhs.size();
+            auto         rhs_sz = Traits::length(rhs);
+            basic_string ret(
+                detail::uninitialized_size_tag(), lhs_sz + rhs_sz,
+                allocator_traits<basic_string::allocator_type>::
+                    select_on_container_copy_construction(lhs.get_allocator()));
+            auto buffer = ret.data();
+            Traits::copy(buffer, lhs.data(), lhs_sz);
+            Traits::copy(buffer + lhs_sz, rhs, rhs_sz);
+            ret.null_terminate();
+            return ret;
+        }
+
+        friend constexpr basic_string operator+(basic_string&& lhs,
+                                                const CharT*   rhs)
+        {
+            return move(lhs.append(rhs));
+        }
+
+        friend constexpr basic_string operator+(const basic_string& lhs,
+                                                CharT               rhs)
+        {
+            auto         lhs_sz = lhs.size();
+            basic_string ret(
+                detail::uninitialized_size_tag(), lhs_sz + 1,
+                allocator_traits<basic_string::allocator_type>::
+                    select_on_container_copy_construction(lhs.get_allocator()));
+            auto buffer = ret.data();
+            Traits::copy(buffer, lhs.data(), lhs_sz);
+            Traits::assign(buffer + lhs_sz, 1, rhs);
+            ret.null_terminate();
+            return ret;
+        }
+
+        friend constexpr basic_string operator+(basic_string&& lhs, CharT rhs)
+        {
+            lhs.push_back(rhs);
+            return move(lhs);
+        }
+
+      private:
+        using view_type = std::basic_string_view<CharT, Traits>;
+
+        constexpr static auto _terminator = value_type();
+
+        allocator_type        _allocator;
+
+        struct long_data
+        {
+            struct [[gnu::packed]]
+            {
+                size_type is_long : 1;
+                size_type capacity : sizeof(size_t) * __CHAR_BIT__ - 1;
+            };
+            size_type size;
+            pointer   data;
+        };
+
+        enum
+        {
+            min_cap = (sizeof(long_data) - 1) / sizeof(value_type) > 2
+                        ? (sizeof(long_data) - 1) / sizeof(value_type)
+                        : 2
+        };
+        struct short_data
+        {
+            struct [[gnu::packed]]
+            {
+                unsigned char is_long : 1;
+                unsigned char size    : 7;
+            };
+            char       padding[sizeof(value_type) - 1];
+            value_type data[min_cap];
+        };
+        static_assert(sizeof(short_data)
+                          == (sizeof(value_type) * (min_cap + 1)),
+                      "short_data has an unexpected size.");
+
+        union storage_t
+        {
+            long_data  _long;
+            short_data _short{{false, 0}, {}, {}};
+
+            void       initialize(size_type size, allocator_type& alloc)
+            {
+                if (fits_in_sso(size)) short_init(alloc);
+                else
+                {
+                    long_init();
+                    reallocate(size, false, alloc);
+                }
+                set_size(size);
+            }
+            constexpr void long_init()
+            {
+                _long.is_long  = true;
+                _long.data     = nullptr;
+                _long.size     = 0;
+                _long.capacity = 0;
+            }
+
+            constexpr void short_init(allocator_type& alloc)
+            {
+                if (auto& buffer = _long.data; is_long() && buffer != nullptr)
+                {
+                    alloc.deallocate(buffer, _long.capacity + 1);
+                    buffer = nullptr;
+                }
+
+                _short.is_long = false;
+                _short.size    = 0;
+            }
+            constexpr void reallocate(size_t new_cap, bool copy_old,
+                                      allocator_type& alloc)
+            {
+                if (new_cap == _long.capacity) return;
+
+                auto  old_len    = _long.size;
+                auto  old_cap    = _long.capacity;
+                auto& old_buffer = _long.data;
+
+                auto  new_len    = min(new_cap, old_len);
+                auto  new_buffer = alloc.allocate(new_cap + 1);
+
+                if (old_buffer != nullptr)
+                {
+                    if (old_len != 0 && copy_old)
+                        Traits::copy(new_buffer, old_buffer, new_len);
+                    alloc.deallocate(old_buffer, old_cap + 1);
+                }
+
+                _long.size     = new_len;
+                _long.data     = new_buffer;
+                _long.capacity = new_cap;
+            }
+
+            constexpr static bool fits_in_sso(size_type size)
+            {
+                return size < min_cap;
+            }
+            constexpr bool is_long() const noexcept { return _short.is_long; }
+            constexpr size_type size() const noexcept
+            {
+                return is_long() ? _long.size : _short.size;
+            }
+            constexpr void set_size(size_type size) noexcept
+            {
+                if (is_long()) _long.size = size;
+                else _short.size = size & 0x7f;
+            }
+            constexpr size_type capacity() const noexcept
+            {
+                if (is_long()) return _long.capacity;
+                return min_cap;
+            }
+            constexpr pointer data() noexcept
+            {
+                return is_long() ? _long.data : _short.data;
+            }
+            constexpr const_pointer data() const noexcept
+            {
+                return is_long() ? _long.data : _short.data;
+            }
+
+        } _storage;
+
+        constexpr void grow_to(size_type new_cap)
+        {
+            if (_storage.is_long())
+            {
+                _storage.reallocate(new_cap, true, _allocator);
+                return;
+            }
+
+            auto buffer = _allocator.allocate(new_cap + 1);
+            auto len    = _storage._short.size;
+
+            Traits::copy(buffer, _storage._short.data, len);
+            Traits::assign(buffer[len], _terminator);
+
+            _storage.long_init();
+            _storage._long.data     = buffer;
+            _storage._long.size     = len;
+            _storage._long.capacity = new_cap;
+        }
+
+        constexpr void null_terminate() noexcept
+        {
+            auto buffer = data();
+            if (buffer == nullptr) return;
+            Traits::assign(buffer[size()], _terminator);
+        }
+
+        constexpr bool addr_in_range(const_pointer ptr) const
+        {
+            if (std::is_constant_evaluated()) return false;
+            return data() <= ptr && ptr <= data() + size();
+        }
+
+        constexpr void internal_replace_impl(auto func, size_type pos,
+                                             size_type oldcount,
+                                             size_type count)
+        {
+            auto cap = capacity();
+            auto sz  = size();
+
+            auto rsz = sz - oldcount + count;
+
+            if (cap < rsz) grow_to(rsz);
+
+            if (oldcount != count)
+                Traits::move(data() + pos + count, data() + pos + oldcount,
+                             sz - pos - oldcount);
+
+            func();
+
+            _storage.set_size(rsz);
+            null_terminate();
+        }
+
+        constexpr void internal_replace(size_type pos, const_pointer str,
+                                        size_type oldcount, size_type count)
+        {
+            if (addr_in_range(str))
+            {
+                basic_string rstr(str, count);
+                internal_replace_impl(
+                    [=, this, &rstr]()
+                    { traits_type::copy(data() + pos, rstr.data(), count); },
+                    pos, oldcount, count);
+                return;
+            }
+            internal_replace_impl(
+                [=, this]() { traits_type::copy(data() + pos, str, count); },
+                pos, oldcount, count);
+        }
+
+        constexpr void internal_replace(size_type pos, value_type ch,
+                                        size_type oldcount, size_type count)
+        {
+            internal_replace_impl([=, this]()
+                                  { Traits::assign(data() + pos, count, ch); },
+                                  pos, oldcount, count);
+        }
+
+        constexpr void internal_insert_impl(auto func, size_type pos,
+                                            size_type size)
+        {
+            if (size != 0)
+            {
+                auto cap = capacity();
+                auto sz  = size();
+                auto rsz = sz + size;
+
+                if (cap < rsz) grow_to(rsz);
+
+                traits_type::move(data() + pos + size, data() + pos, sz - pos);
+                func();
+
+                _storage.set_size(rsz);
+                null_terminate();
+            }
+        }
+
+        constexpr void internal_insert(size_type pos, const_pointer str,
+                                       size_type count)
+        {
+            if (addr_in_range(str))
+            {
+                basic_string rstr(str, count);
+                internal_insert_impl(
+                    [=, &rstr]()
+                    { Traits::copy(data() + pos, rstr.data(), count); },
+                    pos, count);
+            }
+            else
+                internal_insert_impl(
+                    [=]() { Traits::copy(data() + pos, str, count); }, pos,
+                    count);
+        }
+
+        constexpr void internal_insert(size_type pos, value_type ch,
+                                       size_type count)
+        {
+            internal_insert_impl(
+                [=]() { Traits::assign(data() + pos, count, ch); }, pos, count);
+        }
+
+        constexpr void internal_append_impl(auto func, size_type size)
+        {
+            if (size != 0)
+            {
+                auto cap = capacity();
+                auto sz  = size();
+                auto rsz = sz + size;
+
+                if (cap < rsz) grow_to(rsz);
+
+                func(sz);
+                _storage.set_size(rsz);
+                null_terminate();
+            }
+        }
+
+        constexpr void internal_append(const_pointer str, size_type count)
+        {
+            if (addr_in_range(str))
+            {
+                basic_string rstr(str, count);
+                internal_append_impl(
+                    [=, &rstr](size_type pos)
+                    { Traits::copy(data() + pos, rstr.data(), count); },
+                    count);
+            }
+            else
+                internal_append_impl(
+                    [=](size_type pos)
+                    { Traits::copy(data() + pos, str, count); },
+                    count);
+        }
+
+        constexpr void internal_append(value_type ch, size_type count)
+        {
+            internal_append_impl([=](size_type pos)
+                                 { Traits::assign(data() + pos, count, ch); },
+                                 count);
+        }
+
+        constexpr void internal_assign_impl(auto func, size_type size,
+                                            bool copy_old)
+        {
+            if (_storage.fits_in_sso(size))
+            {
+                if (_storage.is_long()) _storage.short_init(_allocator);
+
+                _storage._short.size = size;
+                func(_storage._short.data);
+                null_terminate();
+            }
+            else
+            {
+                if (!_storage.is_long()) _storage.long_init();
+                if (_storage._long.capacity < size)
+                    _storage.reallocate(size, copy_old, _allocator);
+
+                func(_storage._long.data);
+                _storage._long.size = size;
+                null_terminate();
+            }
+        }
+
+        constexpr void internal_assign(const_pointer str, size_type size,
+                                       bool copy_old = false)
+        {
+            if (addr_in_range(str))
+            {
+                basic_string rstr(str, size);
+                internal_assign_impl([=, &rstr](auto data)
+                                     { Traits::copy(data, rstr.data(), size); },
+                                     size, copy_old);
+            }
+            else
+                internal_assign_impl([&](auto data)
+                                     { Traits::copy(data, str, size); },
+                                     size, copy_old);
+        }
+
+        constexpr void internal_assign(value_type ch, size_type count,
+                                       bool copy_old = false)
+        {
+            internal_assign_impl([=](auto data)
+                                 { Traits::assign(data, count, ch); },
+                                 count, copy_old);
+        }
+    };
+
+    template <typename CharT, typename Traits, typename Allocator>
+    constexpr bool
+    operator==(const basic_string<CharT, Traits, Allocator>& lhs,
+               const basic_string<CharT, Traits, Allocator>& rhs) noexcept
+    {
+        return lhs.compare(rhs) == 0;
+    }
+
+    template <typename CharT, typename Traits, typename Allocator>
+    constexpr bool operator==(const basic_string<CharT, Traits, Allocator>& lhs,
+                              const CharT*                                  rhs)
+    {
+        return lhs.compare(rhs) == 0;
+    }
+
+    template <typename CharT, typename Traits, typename Allocator>
+    constexpr strong_ordering
+    operator<=>(const basic_string<CharT, Traits, Allocator>& lhs,
+                const basic_string<CharT, Traits, Allocator>& rhs) noexcept
+    {
+        return lhs.compare(rhs) <=> 0;
+    }
+
+    template <typename CharT, typename Traits, typename Allocator>
+    constexpr strong_ordering
+    operator<=>(const basic_string<CharT, Traits, Allocator>& lhs,
+                const CharT*                                  rhs)
+    {
+        return lhs.compare(rhs) <=> 0;
+    }
+
+    // swap
+    template <typename CharT, typename Traits, typename Allocator>
+    constexpr void swap(basic_string<CharT, Traits, Allocator>& lhs,
+                        basic_string<CharT, Traits, Allocator>&
+                            rhs) noexcept(noexcept(lhs.swap(rhs)))
+    {
+        lhs.swap(rhs);
+    }
+
+    // erasure
+    template <typename CharT, typename Traits, typename Allocator, typename U>
+    constexpr typename basic_string<CharT, Traits, Allocator>::size_type
+    erase(basic_string<CharT, Traits, Allocator>& c, const U& value)
+    {
+        auto it = remove(c.begin(), c.end(), value);
+        auto r  = distance(it, c.end());
+        c.erase(it, c.end());
+        return r;
+    }
+
+    template <typename CharT, typename Traits, typename Allocator,
+              typename Pred>
+    constexpr typename basic_string<CharT, Traits, Allocator>::size_type
+    erase_if(basic_string<CharT, Traits, Allocator>& c, Pred pred)
+    {
+        auto it = remove_if(c.begin(), c.end(), pred);
+        auto r  = distance(it, c.end());
+        c.erase(it, c.end());
+        return r;
+    }
+
+    // deduction guides
+    template <typename InputIt,
+              typename Allocator
+              = allocator<typename iterator_traits<InputIt>::value_type>>
+    basic_string(InputIt, InputIt, Allocator = Allocator()) -> basic_string<
+        typename iterator_traits<InputIt>::value_type,
+        char_traits<typename iterator_traits<InputIt>::value_type>, Allocator>;
+
+    template <typename CharT, typename Traits,
+              typename Allocator = allocator<CharT>>
+    explicit basic_string(basic_string_view<CharT, Traits>,
+                          const Allocator& = Allocator())
+        -> basic_string<CharT, Traits, Allocator>;
+
+    template <typename CharT, typename Traits,
+              typename Allocator = allocator<CharT>>
+    basic_string(basic_string_view<CharT, Traits>,
+                 typename basic_string<CharT, Traits, Allocator>::size_type,
+                 typename basic_string<CharT, Traits, Allocator>::size_type,
+                 const Allocator& = Allocator())
+        -> basic_string<CharT, Traits, Allocator>;
+
+    using string    = basic_string<char>;
+    using u8string  = basic_string<char8_t>;
+    using u16string = basic_string<char16_t>;
+    using u32string = basic_string<char32_t>;
+    using wstring   = basic_string<wchar_t>;
+
+    constexpr inline int stoi(const string& str, size_t* pos = nullptr,
+                              int base = 10)
+    {
+        auto  cstr = str.c_str();
+        char* ptr  = const_cast<char*>(cstr);
+
+        auto  ret  = strtol(cstr, &ptr, base);
+        if (pos) *pos = cstr - ptr;
+
+        return ret;
+    }
+
+    constexpr inline long stol(const string& str, size_t* pos = nullptr,
+                               int base = 10)
+    {
+        auto  cstr = str.c_str();
+        char* ptr  = const_cast<char*>(cstr);
+
+        auto  ret  = strtol(cstr, &ptr, base);
+        if (pos) *pos = cstr - ptr;
+
+        return ret;
+    }
+
+    constexpr inline long long stoll(const string& str, size_t* pos = nullptr,
+                                     int base = 10)
+    {
+        auto  cstr = str.c_str();
+        char* ptr  = const_cast<char*>(cstr);
+
+        auto  ret  = strtoll(cstr, &ptr, base);
+        if (pos) *pos = cstr - ptr;
+
+        return ret;
+    }
+
+    constexpr inline unsigned long stoul(const string& str,
+                                         size_t* pos = nullptr, int base = 10)
+    {
+        auto  cstr = str.c_str();
+        char* ptr  = const_cast<char*>(cstr);
+
+        auto  ret  = strtoul(cstr, &ptr, base);
+        if (pos) *pos = cstr - ptr;
+
+        return ret;
+    }
+
+    constexpr inline unsigned long long
+    stoull(const string& str, size_t* pos = nullptr, int base = 10)
+    {
+        auto  cstr = str.c_str();
+        char* ptr  = const_cast<char*>(cstr);
+
+        auto  ret  = strtoull(cstr, &ptr, base);
+        if (pos) *pos = cstr - ptr;
+
+        return ret;
+    }
+
+    namespace detail
+    {
+        template <typename T>
+        constexpr size_t to_chars_len(T value)
+        {
+            constexpr T b1 = 10;
+            constexpr T b2 = 100;
+            constexpr T b3 = 1000;
+            constexpr T b4 = 10000;
+
+            for (size_t i = 1;; i += 4, value /= b4)
+            {
+                if (value < b1) return i;
+                if (value < b2) return i + 1;
+                if (value < b3) return i + 2;
+                if (value < b4) return i + 3;
+            }
+        }
+
+        constexpr void to_chars(char* first, size_t len, auto val)
+        {
+            constexpr static char digits[201]
+                = "0001020304050607080910111213141516171819"
+                  "2021222324252627282930313233343536373839"
+                  "4041424344454647484950515253545556575859"
+                  "6061626364656667686970717273747576777879"
+                  "8081828384858687888990919293949596979899";
+
+            size_t pos = len - 1;
+            while (val >= 100)
+            {
+                auto const num = (val % 100) * 2;
+                val /= 100;
+                first[pos]     = digits[num + 1];
+                first[pos - 1] = digits[num];
+                pos -= 2;
+            }
+            if (val >= 10)
+            {
+                auto const num = val * 2;
+                first[1]       = digits[num + 1];
+                first[0]       = digits[num];
+            }
+            else first[0] = '0' + val;
+        }
+
+        template <signed_integral T, unsigned_integral U = make_unsigned_t<T>>
+        [[gnu::always_inline]]
+        constexpr inline string to_string(T value)
+        {
+            const auto negative = value < 0;
+            const U    uvalue
+                = negative ? static_cast<U>(~value) + static_cast<U>(1) : value;
+            const auto length = to_chars_len(uvalue);
+            string     str(length + negative, '-');
+            to_chars(&str[negative], length, uvalue);
+            return str;
+        }
+
+        template <unsigned_integral T>
+        [[gnu::always_inline]]
+        constexpr inline string to_string(T value)
+        {
+            string str(to_chars_len(value), '\0');
+            to_chars(&str[0], str.length(), value);
+            return str;
+        }
+    } // namespace detail
+
+    constexpr inline string to_string(int val)
+    {
+        return detail::to_string(val);
+    }
+    constexpr inline string to_string(unsigned val)
+    {
+        return detail::to_string(val);
+    }
+    constexpr inline string to_string(long val)
+    {
+        return detail::to_string(val);
+    }
+    constexpr inline string to_string(unsigned long val)
+    {
+        return detail::to_string(val);
+    }
+    constexpr inline string to_string(long long val)
+    {
+        return detail::to_string(val);
+    }
+    constexpr inline string to_string(unsigned long long val)
+    {
+        return detail::to_string(val);
+    }
+
+    // hash support
+    namespace detail
+    {
+        template <typename CharT, typename Allocator,
+                  typename String
+                  = basic_string<CharT, char_traits<CharT>, Allocator>>
+        struct string_hash_base
+        {
+            [[nodiscard]]
+            constexpr size_t
+            operator()(const String& str) const noexcept
+            {
+                return hasher(str.data(), str.length() * sizeof(CharT));
+            }
+        };
+    } // namespace detail
+
+    template <typename Allocator>
+    struct hash<basic_string<char, char_traits<char>, Allocator>>
+        : detail::string_hash_base<char, Allocator>
+    {
+    };
+
+    template <typename Allocator>
+    struct hash<basic_string<char8_t, char_traits<char8_t>, Allocator>>
+        : detail::string_hash_base<char8_t, Allocator>
+    {
+    };
+
+    template <typename Allocator>
+    struct hash<basic_string<char16_t, char_traits<char16_t>, Allocator>>
+        : detail::string_hash_base<char16_t, Allocator>
+    {
+    };
+
+    template <typename Allocator>
+    struct hash<basic_string<char32_t, char_traits<char32_t>, Allocator>>
+        : detail::string_hash_base<char32_t, Allocator>
+    {
+    };
+
+    template <typename Allocator>
+    struct hash<basic_string<wchar_t, char_traits<wchar_t>, Allocator>>
+        : detail::string_hash_base<wchar_t, Allocator>
+    {
+    };
+
+    inline namespace literals
+    {
+        inline namespace string_literals
+        {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wuser-defined-literals"
+            constexpr inline string operator""s(const char* str, size_t len)
+            {
+                return string(str, len);
+            }
+            constexpr inline u8string operator""s(const char8_t* str,
+                                                  size_t         len)
+            {
+                return u8string(str, len);
+            }
+            constexpr inline u16string operator""s(const char16_t* str,
+                                                   size_t          len)
+            {
+                return u16string(str, len);
+            }
+            constexpr inline u32string operator""s(const char32_t* str,
+                                                   size_t          len)
+            {
+                return u32string(str, len);
+            }
+            constexpr inline wstring operator""s(const wchar_t* str, size_t len)
+            {
+                return wstring(str, len);
+            }
+#pragma clang diagnostic pop
+        } // namespace string_literals
+    }     // namespace literals
+} // namespace std
+
+using namespace std::literals::string_literals;

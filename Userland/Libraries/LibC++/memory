@@ -1,0 +1,103 @@
+/*
+ * Created by vitriol1744 on 10.06.2023.
+ * Copyright (c) 2022-2023, Szymon Zemke <Vitriol1744@gmail.com>
+ *
+ * SPDX-License-Identifier: GPL-3
+ */
+#pragma once
+
+#include_next <memory>
+
+#include <enable_shared_from_this.hpp>
+#include <new>
+#include <owner_less.hpp>
+
+void operator delete(void* ptr, size_t) noexcept;
+
+namespace std
+{
+    using namespace smart_ptr;
+    namespace detail
+    {
+        template <typename Type>
+        struct make_unique_t
+        {
+            using single_object = unique_ptr<Type>;
+        };
+
+        template <typename Type>
+        struct make_unique_t<Type[]>
+        {
+            using array = unique_ptr<Type[]>;
+        };
+
+        template <typename Type, size_t Bound>
+        struct make_unique_t<Type[Bound]>
+        {
+            struct invalid_type
+            {
+            };
+        };
+
+        template <typename Type>
+        using unique_ptr_t = typename make_unique_t<Type>::single_object;
+
+        template <typename Type>
+        using unique_ptr_array_t = typename make_unique_t<Type>::array;
+
+        template <typename Type>
+        using invalid_make_unique_t =
+            typename make_unique_t<Type>::invalid_type;
+    } // namespace detail
+
+    template <typename Type, typename... Args>
+    constexpr inline detail::unique_ptr_t<Type> make_unique(Args&&... args)
+    {
+        return unique_ptr<Type>(new Type(forward<Args>(args)...));
+    }
+
+    template <typename Type>
+    constexpr inline detail::unique_ptr_array_t<Type> make_unique(size_t num)
+    {
+        return unique_ptr<Type>(new remove_extent_t<Type>[num]());
+    }
+
+    template <typename Type, typename... Args>
+    detail::invalid_make_unique_t<Type> make_unique(Args&&...) = delete;
+
+    template <typename Type>
+    struct allocator
+    {
+        using value_type               = Type;
+        using pointer                  = Type*;
+        using const_pointer            = const Type*;
+        using reference                = Type&;
+        using const_reference          = const Type&;
+        using size_type                = size_t;
+        using difference_type          = ptrdiff_t;
+
+        constexpr allocator() noexcept = default;
+
+        template <typename U>
+        constexpr allocator(const allocator<U>& other) noexcept
+        {
+        }
+
+        [[nodiscard]]
+        constexpr Type* allocate(size_t size)
+        {
+            return static_cast<Type*>(::operator new(size * sizeof(Type)));
+        }
+
+        constexpr void deallocate(Type* ptr, size_t size)
+        {
+            ::operator delete(ptr, size);
+        }
+
+        friend constexpr bool operator==(const allocator&,
+                                         const allocator&) noexcept
+        {
+            return true;
+        }
+    };
+} // namespace std
