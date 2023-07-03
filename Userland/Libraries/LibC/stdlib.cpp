@@ -113,8 +113,7 @@ extern "C"
 
     void* realloc(void* oldptr, size_t size)
     {
-        KernelHeap::Free(oldptr);
-        return KernelHeap::Allocate(size);
+        return KernelHeap::Reallocate(oldptr, size);
     }
 
     long long strtoll(const char* str, char** str_end, int base)
