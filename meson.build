@@ -6,9 +6,7 @@ cxx = meson.get_compiler('cpp')
 ld = cxx.get_linker_id()
 arch = host_machine.cpu_family()
 
-
 srcs = []
-
 
 include_directories = [
     include_directories('ThirdParty/limine'),
@@ -28,13 +26,22 @@ add_global_arguments([
     '-fno-pie',
     '-nostdlib',
     '-nostdinc++',
+    '-fno-omit-frame-pointer',
+    '-Ofast',
 ], language: ['c', 'cpp'])
+
+if arch == 'x86_64'
+add_global_arguments(['-mcmodel=kernel'], language: ['c', 'cpp'])
+endif
 
 add_global_arguments([
     '-fno-rtti',
     '-std=c++2b',
     '-fno-exceptions',
     '-Wno-unused-parameter',
+    '-fsized-deallocation',
+    '-Wno-non-virtual-dtor',
+    '-Wno-frame-address',
     '-I'+meson.source_root()+'/Userland/Libraries/LibC++',
     '-I'+meson.source_root()+'/ThirdParty/libstdcxx-headers/include',
     '-DFMT_HEADER_ONLY',
@@ -46,8 +53,17 @@ add_global_arguments([
 
 
 cmake = import('cmake')
+phmap_opts = cmake.subproject_options()
+phmap_opts.add_cmake_defines({
+    'PHMAP_BUILD_EXAMPLES' : false,
+    'PHMAP_BUILD_TESTS' : false,
+    'PHMAP_INSTALL' : false
+})
+
 deps = [
+    cmake.subproject('parallel_hashmap', options : phmap_opts).dependency('phmap'),
     dependency('compiler_rt_builtins'),
+    dependency('cwalk'),
 ]
 
 inc_deps = [ ]
@@ -102,7 +118,8 @@ iso_files = [
         meson.source_root() / 'ThirdParty/limine/limine-bios.sys',
         meson.source_root() / 'ThirdParty/limine/limine-bios-cd.bin',
         meson.source_root() / 'ThirdParty/limine/limine-uefi-cd.bin',
-        ksyms
+        ksyms,
+        meson.source_root() / 'initrd.tar.gz',
     ]
 
 iso = custom_target('iso',
