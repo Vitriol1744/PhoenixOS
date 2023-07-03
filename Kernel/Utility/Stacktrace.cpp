@@ -114,8 +114,12 @@ namespace Stacktrace
             stackFrame     = stackFrame->rbp;
             Symbol* symbol = GetSymbol(rip);
 
-            if (!symbol) LogError(" {}. ?? <{}>", i + 1, rip);
-            else LogError(" {}. {} <{}>", i + 1, symbol->name, rip);
+            if (!symbol)
+                LogMessage("[\u001b[33mStacktrace\u001b[0m]: {}. ?? <{}>",
+                           i + 1, rip);
+            else
+                LogMessage("[\u001b[33mStacktrace\u001b[0m]: {}. {} <{}>",
+                           i + 1, symbol->name, rip);
         }
     }
 } // namespace Stacktrace
