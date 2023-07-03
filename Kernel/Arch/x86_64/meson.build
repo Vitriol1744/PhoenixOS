@@ -1,9 +1,9 @@
 srcs += files(
     'Drivers/Serial.cpp',
-    'Drivers/E9Logger.cpp',
+    'Arch.cpp',
+    'GDT.cpp',
     'IDT.cpp',
-    'interrupts.x86_64.asm',
-    'GDT.cpp')
+    'interrupts.x86_64.asm',)
 
 cxx_args += [
     '-march=x86-64',
@@ -16,3 +16,5 @@ cxx_args += [
     '-mabi=sysv',
     '-target', 'x86_64-none',
     ]
+
+ld_args += ['-Wl,-z,noexecstack']

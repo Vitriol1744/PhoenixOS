@@ -41,14 +41,11 @@ struct CPUContext
 extern const char* exceptionNames[];
 
 [[noreturn]]
-static void raiseException(struct CPUContext* cpuContext)
+static void raiseException(CPUContext* cpuContext)
 {
-    LogError("\nCaptured exception on cpu {}: '{}'\nError Code: {}\nrip: {}",
-             (uint64_t)0,
-             (const char*)exceptionNames[cpuContext->interruptVector],
-             (uint64_t)cpuContext->errorCode, (uint64_t)cpuContext->rip);
-
-    __asm__ volatile("cli; hlt");
+    Panic("Captured exception on cpu {}: '{}'\n\rError Code: {}\n\rrip: {}", 0,
+          exceptionNames[cpuContext->interruptVector], cpuContext->errorCode,
+          cpuContext->rip);
 }
 
 inline constexpr const uint32_t MAX_IDT_ENTRIES   = 256;
@@ -81,7 +78,7 @@ struct IDTEntry
 inline constexpr const uint32_t GATE_TYPE_INTERRUPT = 0xe;
 inline constexpr const uint32_t GATE_TYPE_TRAP      = 0xf;
 
-alignas(0x10) static IDTEntry idtEntries[256]       = {0};
+alignas(0x10) static IDTEntry idtEntries[256]       = {};
 static InterruptHandler* interruptHandlers[256]     = {};
 
 extern "C" void*         interrupt_handlers[];
@@ -105,7 +102,6 @@ static void              idtWriteEntry(uint16_t vector, uintptr_t handler,
 [[noreturn]]
 static void unhandledInterrupt(CPUContext* context)
 {
-    if (context->interruptVector < 0x20) raiseException(context);
     LogError("\nAn unhandled interrupt 0x%02x occurred",
              context->interruptVector);
 
@@ -114,15 +110,16 @@ static void unhandledInterrupt(CPUContext* context)
 
 extern "C" void raiseInterrupt(CPUContext* context)
 {
-    if (context->interruptVector < 32) raiseException(context);
+    if (context->interruptVector < 0x20) raiseException(context);
     else if (interruptHandlers[context->interruptVector])
     {
         InterruptHandler& handler
             = *interruptHandlers[context->interruptVector];
         handler(context);
         handler.OnEndOfInterrupt();
+        return;
     }
-    else unhandledInterrupt(context);
+    unhandledInterrupt(context);
 }
 
 namespace IDT

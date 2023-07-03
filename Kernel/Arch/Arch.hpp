@@ -6,7 +6,10 @@
  */
 #pragma once
 
+#include <cstddef>
+
 namespace Arch
 {
+    void Initialize();
     void LogE9(const char* str, size_t len);
-}
+} // namespace Arch

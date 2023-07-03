@@ -1,6 +1,6 @@
 srcs += files(
-    'Drivers/E9Logger.cpp',
-    'Drivers/Serial.cpp'
+    'Drivers/Serial.cpp',
+    'Arch.cpp',
 )
 
 cxx_args += [

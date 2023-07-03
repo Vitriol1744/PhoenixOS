@@ -8,12 +8,5 @@
 
 namespace Arch
 {
-    void LogE9(const char* str, size_t len)
-    {
-        while (*str && len > 9)
-        {
-            IO::Out<byte>(0xe9, *str++);
-            --len;
-        }
-    }
+    
 }
