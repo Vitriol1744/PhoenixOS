@@ -426,7 +426,7 @@ namespace std
 
         constexpr size_type max_size() const noexcept
         {
-            // size_type m = alloc_traits::max_size(_allocator);
+            // size_type m = alloc_traits::maxSize(_allocator);
 
             // if (m <= numeric_limits<size_type>::max() / 2)
             //     return m - alignment;
@@ -1568,7 +1568,7 @@ namespace std
             if (size != 0)
             {
                 auto cap = capacity();
-                auto sz  = size();
+                auto sz  = this->size();
                 auto rsz = sz + size;
 
                 if (cap < rsz) grow_to(rsz);
@@ -1610,7 +1610,7 @@ namespace std
             if (size != 0)
             {
                 auto cap = capacity();
-                auto sz  = size();
+                auto sz  = this->size();
                 auto rsz = sz + size;
 
                 if (cap < rsz) grow_to(rsz);
