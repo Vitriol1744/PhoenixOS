@@ -1,33 +1,41 @@
 srcs += files(
-    'KernelStart.cpp',
     'Drivers/Terminal.cpp',
-    'BootInfo.cpp',
-    'Utility/Stacktrace.cpp',
-    'Utility/Logger.cpp',
-    'Memory/PhysicalMemoryManager.cpp',
     'Memory/KernelHeap.cpp',
-    'icxxabi.cpp')
+    'Memory/PhysicalMemoryManager.cpp',
+    'Utility/Logger.cpp',
+    'Utility/Stacktrace.cpp',
+    'VirtualFileSystem/DevTmpFs/DevTmpFs.cpp',
+    'VirtualFileSystem/DevTmpFs/DevTmpFsINode.cpp',
+    'VirtualFileSystem/Initrd/Initrd.cpp',
+    'VirtualFileSystem/Initrd/Ustar.cpp',
+    'VirtualFileSystem/TmpFs/TmpFs.cpp',
+    'VirtualFileSystem/TmpFs/TmpFsINode.cpp',
+    'VirtualFileSystem/INode.cpp',
+    'VirtualFileSystem/VirtualFileSystem.cpp',
+    'BootInfo.cpp',
+    'icxxabi.cpp',
+    'KernelStart.cpp',)
 
 cxx_args = [
-    '-g',
-    '-O2',
+    #'-g',
+    #'-O2',
     '-Wall',
     '-Wextra',
     '-Wpedantic',
-    '-fno-lto',
-    '-m64',
+    #'-fno-lto',
+    #'-m64',
     '-mno-red-zone',
 ]
 
 ld_args = [
-    '-g',
+    #'-g',
     '-nostdlib',
-    '-no-pie',
+    #'-no-pie',
     '-static',
-    '--rtlib=compiler-rt',
+    #'--rtlib=compiler-rt',
     '-fuse-ld=lld',
-    #'-z max-page-size=0x1000',
-    '-T' + meson.current_source_dir() + '/linker.'+arch+'.ld'
+    '-Wl,-z,max-page-size=0x1000',
+    '-Wl,-T,' + meson.current_source_dir() + '/linker.'+arch+'.ld'
 ]
 
 if arch == 'x86_64'

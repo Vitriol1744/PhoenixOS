@@ -55,7 +55,7 @@ inline void panic(std::string_view msg)
 
 #define Assert(expr) AssertMsg(expr, #expr)
 #define AssertMsg(expr, msg)                                                   \
-    !(expr) ? Panic("Assertion Failed: %s, In File: %s, At Line: %d", msg,     \
+    !(expr) ? Panic("Assertion Failed: {}, In File: {}, At Line: {}", msg,     \
                     __FILE__, __LINE__)                                        \
             : (void)0;
 #define ToDo() AssertMsg(false, "Function is not implemented!")
