@@ -12,6 +12,7 @@
 
 enum class LogLevel
 {
+    eNone,
     eDebug,
     eTrace,
     eInfo,
@@ -96,7 +97,7 @@ namespace Logger
 
     inline void Log(LogLevel logLevel, std::string_view string)
     {
-        LogChar('[');
+        if (logLevel != LogLevel::eNone) LogChar('[');
         switch (logLevel)
         {
             case LogLevel::eDebug:
@@ -124,11 +125,17 @@ namespace Logger
                 LogChar(FOREGROUND_COLOR_WHITE);
                 LogString("Fatal");
                 break;
+
+            default: break;
         }
-        LogChar(FOREGROUND_COLOR_WHITE);
-        LogChar(BACKGROUND_COLOR_BLACK);
-        LogChar(RESET_COLOR);
-        LogString("]: ");
+
+        if (logLevel != LogLevel::eNone)
+        {
+            LogChar(FOREGROUND_COLOR_WHITE);
+            LogChar(BACKGROUND_COLOR_BLACK);
+            LogChar(RESET_COLOR);
+            LogString("]: ");
+        }
         LogString(string);
         LogChar('\n');
     }
@@ -141,7 +148,9 @@ namespace Logger
     #define LogDebug(...)
 #endif
 
-#define ENABLE_LOGGING true
+#define LogMessage(...) Logger::Log(LogLevel::eNone, std::format(__VA_ARGS__))
+
+#define ENABLE_LOGGING  true
 #if ENABLE_LOGGING == true
     #define LogTrace(...)                                                      \
         Logger::Log(LogLevel::eTrace, std::format(__VA_ARGS__))
