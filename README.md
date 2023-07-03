@@ -1,4 +1,5 @@
 Modern Unix-like Operating System written in C++20
+<img src="./screenshot.png">
 
 ## Supported architectures
 
