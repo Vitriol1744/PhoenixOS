@@ -10,7 +10,6 @@
 
 #include "Memory/PhysicalMemoryManager.hpp"
 #include "Memory/SlabAllocator.hpp"
-#include "Memory/VirtualMemoryManager.hpp"
 
 namespace
 {
@@ -90,8 +89,58 @@ namespace KernelHeap
         return ret;
     }
     // TODO(V1tri0l1744): Reallocate
-    void* Reallocate(void* ptr, size_t size) { return nullptr; }
-    void  Free(void* memory)
+    void* Reallocate(void* ptr, size_t size)
+    {
+        if (!ptr) return Allocate(size);
+        if ((reinterpret_cast<uintptr_t>(ptr) & 0xfff) == 0)
+        {
+            BigAllocMeta* metadata = reinterpret_cast<BigAllocMeta*>(
+                reinterpret_cast<uintptr_t>(ptr) - 0x1000);
+            size_t oldSize = metadata->size;
+
+            if (Math::DivRoundUp(oldSize, 0x1000)
+                == Math::DivRoundUp(size, 0x1000))
+            {
+                metadata->size = size;
+                return ptr;
+            }
+
+            if (size == 0)
+            {
+                Free(ptr);
+                return nullptr;
+            }
+
+            if (size < oldSize) oldSize = size;
+
+            void* ret = Allocate(size);
+            if (!ret) return ptr;
+
+            memcpy(ret, ptr, oldSize);
+            Free(ptr);
+            return ret;
+        }
+
+        SlabAllocatorBase* slab = reinterpret_cast<SlabHeader*>(
+                                      reinterpret_cast<uintptr_t>(ptr) & ~0xFFF)
+                                      ->slab;
+        size_t oldSize = slab->GetAllocationSize();
+
+        if (size == 0)
+        {
+            Free(ptr);
+            return nullptr;
+        }
+        if (size < oldSize) oldSize = size;
+
+        void* ret = Allocate(size);
+        if (!ret) return ptr;
+
+        memcpy(ret, ptr, oldSize);
+        Free(ptr);
+        return ptr;
+    }
+    void Free(void* memory)
     {
         if (!memory) return;
         InternalFree(memory);

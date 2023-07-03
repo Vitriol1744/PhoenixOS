@@ -18,8 +18,9 @@
 class SlabAllocatorBase
 {
   public:
-    virtual void* Allocate()      = 0;
-    virtual void  Free(void* ptr) = 0;
+    virtual void*  Allocate()          = 0;
+    virtual void   Free(void* ptr)     = 0;
+    virtual size_t GetAllocationSize() = 0;
 };
 
 struct SlabHeader
@@ -49,30 +50,9 @@ class SlabAllocator : public SlabAllocatorBase
             array[i * fact]
                 = reinterpret_cast<uint64_t>(&array[(i + 1) * fact]);
         array[max * fact] = 0;
-
-        //        LogTrace("Allocating new page...");
-        //        firstFree =
-        //        (uintptr_t)PhysicalMemoryManager::CallocatePages(1)
-        //                  + BootInfo::GetHHDMOffset();
-        //
-        //        auto available
-        //            = 0x1000 - Math::AlignUp(sizeof(SlabHeader),
-        //            allocationSize);
-        //        auto slabPointer  = reinterpret_cast<SlabHeader*>(firstFree);
-        //        slabPointer->slab = this;
-        //        firstFree += Math::AlignUp(sizeof(SlabHeader),
-        //        allocationSize);
-        //
-        //        auto array = reinterpret_cast<uint64_t*>(firstFree);
-        //        auto max   = available / allocationSize - 1;
-        //        auto fact  = allocationSize / 8;
-        //        for (size_t i = 0; i < max; i++)
-        //            array[i * fact]
-        //                = reinterpret_cast<uint64_t>(&array[(i + 1) * fact]);
-        //        array[max * fact] = 0;
     }
 
-    void* Allocate()
+    void* Allocate() override
     {
         std::unique_lock guard(lock);
         if (!firstFree) Initialize();
@@ -92,6 +72,7 @@ class SlabAllocator : public SlabAllocatorBase
         newHead[0]   = firstFree;
         firstFree    = reinterpret_cast<uintptr_t>(newHead);
     }
+    virtual size_t GetAllocationSize() override { return allocationSize; }
 
     template <typename T>
     T Allocate()
