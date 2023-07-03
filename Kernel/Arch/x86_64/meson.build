@@ -1,4 +1,5 @@
 srcs += files(
+    'Drivers/PIC.cpp',
     'Drivers/Serial.cpp',
     'Arch.cpp',
     'GDT.cpp',

@@ -6,6 +6,7 @@
  */
 #include "Arch/Arch.hpp"
 
+#include "Arch/x86_64/Drivers/PIC.hpp"
 #include "Arch/x86_64/GDT.hpp"
 #include "Arch/x86_64/IDT.hpp"
 #include "Arch/x86_64/IO.hpp"
@@ -19,6 +20,9 @@ namespace Arch
 
         IDT::Initialize();
         IDT::Load();
+
+        PIC::Remap(0x20, 0x28);
+        PIC::MaskAllIRQs();
     }
     void LogE9(const char* str, size_t len)
     {
