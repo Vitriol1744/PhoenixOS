@@ -6,25 +6,38 @@
  */
 #pragma once
 
-#include <optional>
+#include "Arch/Interrupts/InterruptManager.hpp"
+
 #include <cstdint>
+#include <optional>
 
 class InterruptHandler
 {
-    public:
-        virtual ~InterruptHandler() = default;
+  public:
+    virtual ~InterruptHandler() = default;
 
-        void SetInterruptNumber(uint8_t interruptNumber) { this->interruptNumber = interruptNumber; }
-        uint8_t GetInterruptNumber() const { return interruptNumber.has_value() ? interruptNumber.value() : 0; }
+    void SetInterruptVector(uint8_t interruptNumber)
+    {
+        interruptVector = interruptNumber;
+    }
+    uint8_t GetInterruptVector() const
+    {
+        return interruptVector.has_value() ? interruptVector.value() : 0;
+    }
 
-        bool operator()(struct CPUContext* ctx) { return HandleInterrupt(ctx); }
-        virtual bool OnEndOfInterrupt() = 0;
+    bool operator()(struct CPUContext* ctx) { return HandleInterrupt(ctx); }
+    virtual bool OnEndOfInterrupt() = 0;
 
-    protected:
-        InterruptHandler() = default;
+  protected:
+    InterruptHandler()                            = default;
 
-        virtual bool HandleInterrupt(CPUContext* ctx) = 0;
+    virtual bool HandleInterrupt(CPUContext* ctx) = 0;
 
-    private:
-        std::optional<uint8_t> interruptNumber;
+    inline void  Register()
+    {
+        InterruptManager::RegisterInterruptHandler(*this);
+    }
+
+  private:
+    std::optional<uint8_t> interruptVector;
 };

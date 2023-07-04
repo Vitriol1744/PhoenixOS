@@ -8,6 +8,7 @@
 
 #include "Common.hpp"
 
+#include "Arch/x86_64/Drivers/PIC.hpp"
 #include "Arch/x86_64/GDT.hpp"
 
 struct CPUContext
@@ -102,7 +103,7 @@ static void              idtWriteEntry(uint16_t vector, uintptr_t handler,
 [[noreturn]]
 static void unhandledInterrupt(CPUContext* context)
 {
-    LogError("\nAn unhandled interrupt 0x%02x occurred",
+    LogError("\nAn unhandled interrupt 0x{:x} occurred",
              context->interruptVector);
 
     for (;;) { __asm__ volatile("cli; hlt"); }
@@ -158,7 +159,9 @@ namespace IDT
     }
     void RegisterInterruptHandler(InterruptHandler* handler, uint8_t dpl)
     {
-        interruptHandlers[handler->GetInterruptNumber()] = handler;
+        Assert(handler->GetInterruptVector() >= 0x20);
+        interruptHandlers[handler->GetInterruptVector()] = handler;
+        idtEntries[handler->GetInterruptVector()].dpl    = dpl;
     }
 } // namespace IDT
 

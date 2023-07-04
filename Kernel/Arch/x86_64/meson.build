@@ -1,9 +1,11 @@
 srcs += files(
+    'Drivers/Keyboard.cpp',
     'Drivers/PIC.cpp',
     'Drivers/Serial.cpp',
     'Arch.cpp',
     'GDT.cpp',
     'IDT.cpp',
+    'InterruptManager.cpp',
     'interrupts.x86_64.asm',)
 
 cxx_args += [

@@ -6,6 +6,7 @@
  */
 #include "Arch/Arch.hpp"
 
+#include "Arch/Interrupts/InterruptManager.hpp"
 #include "Arch/x86_64/Drivers/PIC.hpp"
 #include "Arch/x86_64/GDT.hpp"
 #include "Arch/x86_64/IDT.hpp"
@@ -18,8 +19,7 @@ namespace Arch
         GDT::Initialize();
         GDT::Load();
 
-        IDT::Initialize();
-        IDT::Load();
+        InterruptManager::Initialize();
 
         PIC::Remap(0x20, 0x28);
         PIC::MaskAllIRQs();
