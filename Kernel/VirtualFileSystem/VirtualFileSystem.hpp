@@ -7,8 +7,8 @@
 #pragma once
 
 #include "VirtualFileSystem/Filesystem.hpp"
-#include <Utility/Path.hpp>
-#include <Utility/Types.hpp>
+#include "Utility/Path.hpp"
+
 #include <cerrno>
 #include <cstdio>
 #include <memory>

@@ -7,7 +7,7 @@
 #pragma once
 
 #include "Utility/Path.hpp"
-#include "Utility/Types.hpp"
+#include "Utility/UnixTypes.hpp"
 
 #include <atomic>
 #include <cerrno>
