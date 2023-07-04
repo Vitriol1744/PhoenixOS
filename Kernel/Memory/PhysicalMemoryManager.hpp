@@ -13,20 +13,31 @@
 
 namespace PhysicalMemoryManager
 {
-    bool Initialize();
+    bool  Initialize();
     void* AllocatePages(size_t count = 1);
     void* CallocatePages(size_t count = 1);
-    void FreePages(void* ptr, size_t count);
+    void  FreePages(void* ptr, size_t count);
 
     template <typename T>
-    T AllocatePages(size_t count = 1) { return reinterpret_cast<T>(AllocatePages(count)); }
+    T AllocatePages(size_t count = 1)
+    {
+        return reinterpret_cast<T>(AllocatePages(count));
+    }
     template <typename T>
-    T CallocatePages(size_t count = 1) { return reinterpret_cast<T>(CallocatePages(count)); }
+    T CallocatePages(size_t count = 1)
+    {
+        return reinterpret_cast<T>(CallocatePages(count));
+    }
     template <typename T>
-    void FreePages(T ptr, size_t count) { FreePages(reinterpret_cast<void*>(ptr), count); }
+    void FreePages(T ptr, size_t count)
+    {
+        FreePages(reinterpret_cast<void*>(ptr), count);
+    }
 
     uint64_t GetPageSize();
     uint64_t GetTotalMemory();
     uint64_t GetFreeMemory();
     uint64_t GetUsedMemory();
-}
+} // namespace PhysicalMemoryManager
+
+namespace PMM = PhysicalMemoryManager;
