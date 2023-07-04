@@ -7,9 +7,11 @@
 #include "Arch/Arch.hpp"
 
 #include "API/POSIX/sys/stat.h"
+#include "Drivers/Keyboard.hpp"
 #include "Drivers/Serial.hpp"
 #include "Drivers/Terminal.hpp"
 #include "Memory/PhysicalMemoryManager.hpp"
+#include "Memory/VirtualMemoryManager.hpp"
 #include "Utility/Logger.hpp"
 #include "Utility/Stacktrace.hpp"
 #include "VirtualFileSystem/INode.hpp"
@@ -64,7 +66,8 @@ void PrintSegments(std::vector<std::string_view> segments)
     for (auto seg : segments) LogInfo("Segment: \"{}\"", seg.data());
 }
 
-extern "C" void kernelStart()
+extern "C" [[noreturn]]
+void kernelStart()
 {
 #if PH_ARCH == PH_ARCH_X86_64
     __asm__ volatile("cli");
@@ -78,6 +81,7 @@ extern "C" void kernelStart()
     TryInit(PhysicalMemoryManager::Initialize(), "Initializing PMM", (void)0,
             void(0));
     Arch::Initialize();
+    Keyboard keyboard;
     Stacktrace::Initialize();
 
     Assert(VFS::MountRoot("tmpfs"));
@@ -89,7 +93,8 @@ extern "C" void kernelStart()
 
     PrintSegments(pathSegments1);
     PrintSegments(pathSegments2);
-    hcf();
+    VMM::Initialize();
+    VMM::SwitchPageMap(VMM::GetKernelPageMap());
 
     INode* root = VFS::GetRootINode();
     VFS::CreateNode(root, "/tmpfs", S_IFDIR, INodeType::eDirectory);
@@ -123,6 +128,8 @@ extern "C" void kernelStart()
     std::string s3 = s1 + s2;
 
     LogInfo("Yo! {} White!", "Mistuh");
+
+    while (true) __asm__ volatile("sti");
 
     hcf();
 }

@@ -14,10 +14,14 @@ SECTIONS
 {
     . = 0xffffffff80000000;
 
+    text_start_addr = .;
     .text : { *(.text .text.*) } :text
+    text_end_addr = .;
     . += CONSTANT(MAXPAGESIZE);
 
+    rodata_start_addr = .;
     .rodata : { *(.rodata .rodata.*) } :rodata
+    rodata_end_addr = .;
     . += CONSTANT(MAXPAGESIZE);
 
     .init_array :
@@ -29,6 +33,7 @@ SECTIONS
     }
     . += CONSTANT(MAXPAGESIZE);
 
+    data_start_addr = .;
     .data : { *(.data .data.*) } :data
 
     /* NOTE: .bss needs to be the last thing mapped to :data, otherwise lots of */
@@ -36,6 +41,7 @@ SECTIONS
     /* If you need, for example, .init_array and .fini_array, those should be placed */
     /* above this. */
     .bss : { *(COMMON) *(.bss .bss.*) } :data
+    data_end_addr = .;
 
     /* Discard .note.* and .eh_frame since they may cause issues on some hosts. */
     /DISCARD/ : { *(.eh_frame) *(.note .note.*) }
