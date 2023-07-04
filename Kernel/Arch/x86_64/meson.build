@@ -3,6 +3,7 @@ srcs += files(
     'Drivers/PIC.cpp',
     'Drivers/Serial.cpp',
     'Arch.cpp',
+    'CMOS.cpp',
     'GDT.cpp',
     'IDT.cpp',
     'InterruptManager.cpp',

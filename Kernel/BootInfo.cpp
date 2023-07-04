@@ -67,7 +67,8 @@ static Framebuffer      framebuffer         = {};
 static MemoryMapEntry** memoryMap           = nullptr;
 static uint64_t         memoryMapEntryCount = 0;
 
-extern "C" void         kernelStart();
+extern "C" [[noreturn]]
+void kernelStart();
 
 namespace BootInfo
 {

@@ -106,7 +106,12 @@ void Terminal::PutChar(uint64_t c)
     {
         case '\a': break;
         case '\b':
-            if (x == 0) break;
+            if (x == 0)
+            {
+                if (y == 0) break;
+                y--;
+                x = charactersPerRow - 1;
+            }
             x--;
             PutChar(' ');
             x--;

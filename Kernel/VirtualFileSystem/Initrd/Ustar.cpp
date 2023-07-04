@@ -65,7 +65,6 @@ namespace Ustar
             {
                 case FILE_TYPE_NORMAL:
                 case FILE_TYPE_NORMAL_:
-                    LogInfo("Creating node {}...", filename.data());
                     node = VirtualFileSystem::CreateNode(
                         nullptr, filename, mode | S_IFREG, INodeType::eRegular);
 
@@ -112,7 +111,6 @@ namespace Ustar
                 break;
                 case FILE_TYPE_BLOCK_DEVICE: ToDo();
                 case FILE_TYPE_DIRECTORY:
-                    LogInfo("Creating node {}...", filename.data());
                     node = VirtualFileSystem::CreateNode(nullptr, filename,
                                                          mode | S_IFDIR,
                                                          INodeType::eDirectory);

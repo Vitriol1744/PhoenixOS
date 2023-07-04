@@ -2,6 +2,7 @@ srcs += files(
     'Drivers/Terminal.cpp',
     'Memory/KernelHeap.cpp',
     'Memory/PhysicalMemoryManager.cpp',
+    'Memory/VirtualMemoryManager.cpp',
     'Utility/Logger.cpp',
     'Utility/Stacktrace.cpp',
     'VirtualFileSystem/DevTmpFs/DevTmpFs.cpp',
@@ -19,12 +20,13 @@ srcs += files(
 cxx_args = [
     #'-g',
     #'-O2',
-    '-Wall',
-    '-Wextra',
-    '-Wpedantic',
+    #'-Wall',
+    #'-Wextra',
+    #'-Wpedantic',
     #'-fno-lto',
     #'-m64',
     '-mno-red-zone',
+
 ]
 
 ld_args = [
