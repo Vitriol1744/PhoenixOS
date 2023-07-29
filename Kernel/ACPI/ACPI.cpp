@@ -6,6 +6,7 @@
  */
 #include "ACPI.hpp"
 
+#include "ACPI/MADT.hpp"
 #include "BootInfo.hpp"
 
 namespace ACPI
@@ -90,6 +91,7 @@ namespace ACPI
         PrintACPITables();
 
         LogTrace("ACPI: Initialized");
+        MADT::Initialize();
     }
     SDTHeader* GetTable(const char* signature, usize index)
     {

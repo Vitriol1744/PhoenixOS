@@ -1,5 +1,6 @@
 srcs += files(
     'ACPI/ACPI.cpp',
+    'ACPI/MADT.cpp',
     'Drivers/Terminal.cpp',
     'Memory/KernelHeap.cpp',
     'Memory/PhysicalMemoryManager.cpp',
