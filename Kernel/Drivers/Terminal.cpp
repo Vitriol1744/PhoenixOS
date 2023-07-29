@@ -6,6 +6,7 @@
  */
 #include "Terminal.hpp"
 #include "BootInfo.hpp"
+#include "atomic"
 
 #include <cstring>
 
@@ -36,16 +37,16 @@ static constexpr const uint64_t ANSI_RESET         = 0x6d305b1b;
 
 namespace
 {
-    bool         initialized     = false;
-    PSF1Font*    font            = (PSF1Font*)zap_vga09_psf;
-    Framebuffer* framebuffer     = {};
-    uint32_t     x               = 0;
-    uint32_t     y               = 0;
-    uint32_t     foregroundColor = 0x00ffff;
+    bool                      initialized     = false;
+    PSF1Font*                 font            = (PSF1Font*)zap_vga09_psf;
+    std::atomic<Framebuffer*> framebuffer     = {};
+    uint32_t                  x               = 0;
+    uint32_t                  y               = 0;
+    uint32_t                  foregroundColor = 0x00ffff;
     // uint32_t                 backgroundColor  = 0x383c3c;
-    uint32_t     backgroundColor = 0x000000;
+    uint32_t                  backgroundColor = 0x000000;
 
-    size_t       UpdateColors(const char* character)
+    size_t                    UpdateColors(const char* character)
     {
         uint64_t colorCode
             = *reinterpret_cast<uint64_t*>(const_cast<char*>(character));
@@ -81,17 +82,17 @@ namespace
 bool Terminal::Initialize()
 {
     framebuffer = BootInfo::GetFramebuffer();
-    if (framebuffer && framebuffer->base) initialized = true;
+    if (framebuffer && framebuffer.load()->base) initialized = true;
 
     return initialized;
 }
 
 void Terminal::ClearScreen(uint32_t color)
 {
-    for (uint32_t ypos = 0; ypos < framebuffer->height; ypos++)
+    for (uint32_t ypos = 0; ypos < framebuffer.load()->height; ypos++)
     {
-        for (uint32_t xpos = 0; xpos < framebuffer->width; xpos++)
-            framebuffer->PutPixel(color, xpos, ypos);
+        for (uint32_t xpos = 0; xpos < framebuffer.load()->width; xpos++)
+            framebuffer.load()->PutPixel(color, xpos, ypos);
     }
     x = y = 0;
 }
@@ -99,8 +100,10 @@ void Terminal::PutChar(uint64_t c)
 {
     if (!initialized) return;
     const uint32_t glyphCount = font->mode == PSF1_MODE512 ? 512 : 256;
-    uint32_t charactersPerRow = framebuffer->width / (PSF1_FONT_WIDTH + 2);
-    uint32_t charactersPerCol = framebuffer->height / (font->charSize + 2);
+    uint32_t       charactersPerRow
+        = framebuffer.load()->width / (PSF1_FONT_WIDTH + 2);
+    uint32_t charactersPerCol
+        = framebuffer.load()->height / (font->charSize + 2);
 
     switch (c)
     {
@@ -142,10 +145,10 @@ void Terminal::PutChar(uint64_t c)
                 uint32_t mask = 1 << (PSF1_FONT_WIDTH - 1);
                 for (uint32_t _x = xpos; _x < PSF1_FONT_WIDTH + xpos; _x++)
                 {
-                    framebuffer->PutPixel(*((uint32_t*)glyph) & mask
-                                              ? foregroundColor
-                                              : backgroundColor,
-                                          _x, _y);
+                    framebuffer.load()->PutPixel(*((uint32_t*)glyph) & mask
+                                                     ? foregroundColor
+                                                     : backgroundColor,
+                                                 _x, _y);
                     mask >>= 1;
                 }
                 glyph += bytesPerLine;
@@ -202,11 +205,11 @@ void Terminal::PrintString(const char* string)
 
 void Terminal::ScrollDown(uint8_t lines)
 {
-    size_t bytesToCopy
-        = framebuffer->pitch * (framebuffer->height - lines * font->charSize);
-    void* src = (void*)(framebuffer->base
-                        + framebuffer->pitch * font->charSize * lines);
-    memcpy((void*)framebuffer->base, (void*)src, bytesToCopy);
+    size_t bytesToCopy = framebuffer.load()->pitch
+                       * (framebuffer.load()->height - lines * font->charSize);
+    void* src = (void*)(framebuffer.load()->base
+                        + framebuffer.load()->pitch * font->charSize * lines);
+    memcpy((void*)framebuffer.load()->base, (void*)src, bytesToCopy);
 
     if (y >= lines) y -= lines;
     else y = 0;
