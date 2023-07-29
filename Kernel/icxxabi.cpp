@@ -6,6 +6,8 @@
  */
 #include "Common.hpp"
 
+#include <cxxabi.h>
+
 using DestructorFunction = void (*)(void*);
 
 struct AtExitFunctionEntry
@@ -47,23 +49,42 @@ extern "C"
         };
 
         int64_t findex = -1;
-        for (uint64_t i = 0; i < __atexit_func_count; i++)
+        for (uint64_t j = 0; j < __atexit_func_count; j++)
         {
-            if (__atexit_funcs[i].func == f)
+            if (__atexit_funcs[j].func == f)
             {
-                (*__atexit_funcs[i].func)(__atexit_funcs[i].objptr);
-                __atexit_funcs[i].func = 0;
-                findex                 = i;
+                (*__atexit_funcs[j].func)(__atexit_funcs[j].objptr);
+                __atexit_funcs[j].func = 0;
+                findex                 = j;
             }
         }
         if (findex < 0) return;
-        for (uint64_t i = findex; i < __atexit_func_count; i++)
+        for (uint64_t j = findex; j < __atexit_func_count; j++)
         {
-            __atexit_funcs[i].func   = __atexit_funcs[i + 1].func;
-            __atexit_funcs[i].objptr = __atexit_funcs[i + 1].objptr;
+            __atexit_funcs[j].func   = __atexit_funcs[j + 1].func;
+            __atexit_funcs[j].objptr = __atexit_funcs[j + 1].objptr;
         }
         --__atexit_func_count;
     }
 
-    void __cxa_pure_virtual() { LogInfo("Failed to find virtual function!\n"); }
+    void __cxa_pure_virtual() { Panic("__cxa_pure_virtual()"); }
+
+    namespace __cxxabiv1
+    {
+        int __cxa_guard_acquire(__guard* guard)
+        {
+            if ((*guard) & 0x0001) return 0;
+            if ((*guard) & 0x0100) abort();
+
+            *guard |= 0x0100;
+            return 1;
+        }
+
+        void __cxa_guard_release(__guard* guard) { *guard |= 0x0001; }
+
+        void __cxa_guard_abort(__guard* guard)
+        {
+            Panic("__cxa_guard_abort({})", static_cast<void*>(guard));
+        }
+    } // namespace __cxxabiv1
 }
