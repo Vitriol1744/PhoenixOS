@@ -15,7 +15,11 @@ namespace Serial
 
     uint8_t     Read();
     void        Write(uint8_t data);
-    inline void LogString(const char* str, size_t len)
+    inline void WriteString(const char* str)
+    {
+        while (*str) Write(*str++);
+    }
+    inline void WriteString(const char* str, size_t len)
     {
         while (len-- > 0) Write(*str++);
     }
