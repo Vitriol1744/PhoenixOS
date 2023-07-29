@@ -8,6 +8,8 @@
 
 #include "Arch/x86_64/IO.hpp"
 
+#include <mutex>
+
 namespace Serial
 {
     namespace
@@ -51,13 +53,16 @@ namespace Serial
             IO::Out<byte>(port + 4, 0x0f);
             return true;
         }
+
+        std::mutex lock;
     } // namespace
 
     bool    Initialize() { return InitializePort(Port::eCom1); }
 
     uint8_t Read()
     {
-        word port = static_cast<word>(Port::eCom1);
+        std::unique_lock guard(lock);
+        word             port = static_cast<word>(Port::eCom1);
         while ((IO::In<byte>(port + 5) & 1) == 0)
             ;
 
@@ -65,7 +70,8 @@ namespace Serial
     }
     void Write(uint8_t data)
     {
-        word port = static_cast<word>(Port::eCom1);
+        std::unique_lock guard(lock);
+        word             port = static_cast<word>(Port::eCom1);
         while ((IO::In<byte>(port + 5) & 0x20) == 0)
             ;
 
