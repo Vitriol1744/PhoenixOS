@@ -1,4 +1,4 @@
-project('PhoenixOS', ['c', 'cpp', 'nasm'], version: 'v0.0.1', license: 'GPL-3.0',
+project('PhoenixOS', ['c', 'cpp'], version: 'v0.0.1', license: 'GPL-3.0',
     default_options : ['c_std=c17', 'cpp_std=c++2a', 'optimization=2'])
 
 c = meson.get_compiler('c')
@@ -11,37 +11,41 @@ srcs = []
 include_directories = [
     include_directories('ThirdParty/limine'),
     include_directories('Kernel'),
-    include_directories('ThirdParty/fmt/include'),
     include_directories('Userland/Libraries/LibC'),
     include_directories('Userland/Libraries/LibC++'),
     include_directories('ThirdParty/libstdcxx-headers/include'),
     include_directories('ThirdParty/smart_ptr/include'),
 ]
 
-add_global_arguments([
-    '-ffreestanding',
-    '-fno-stack-protector',
-    '-fno-stack-check',
-    '-fno-pic',
-    '-fno-pie',
-    '-nostdlib',
-    '-nostdinc++',
-    '-fno-omit-frame-pointer',
-    '-Ofast',
-], language: ['c', 'cpp'])
-
 if arch == 'x86_64'
 add_global_arguments(['-mcmodel=kernel'], language: ['c', 'cpp'])
 endif
+warnings = [
+    '-Wno-error=#warnings',
+    '-Wno-builtin-macro-redefined',
+    '-Wno-macro-redefined'
+]
 
 add_global_arguments([
-    '-fno-rtti',
+    warnings,
+    '-ffreestanding',
+    '-fno-stack-protector',
+    '-fno-stack-check',
+    '-fno-omit-frame-pointer',
+    '-fno-pic',
+    '-fno-pie',
+    '-Ofast'
+], language : ['c', 'cpp'])
+
+add_global_arguments([
     '-std=c++2b',
+    '-fno-rtti',
     '-fno-exceptions',
-    '-Wno-unused-parameter',
     '-fsized-deallocation',
+    '-Wno-unused-parameter',
     '-Wno-non-virtual-dtor',
     '-Wno-frame-address',
+    '-nostdinc++',
     '-I'+meson.source_root()+'/Userland/Libraries/LibC++',
     '-I'+meson.source_root()+'/ThirdParty/libstdcxx-headers/include',
     '-DFMT_HEADER_ONLY',
@@ -64,6 +68,8 @@ deps = [
     cmake.subproject('parallel_hashmap', options : phmap_opts).dependency('phmap'),
     dependency('compiler_rt_builtins'),
     dependency('cwalk'),
+    dependency('veque'),
+    dependency('fmt')
 ]
 
 inc_deps = [ ]
@@ -81,14 +87,14 @@ qemu_args = [
     '-smp', '4', '-d', 'cpu_reset',
     '-m', '2G', '-cpu', 'host',
     '-rtc', 'base=localtime',
-    '-no-shutdown', '-no-reboot', '-D', './qemu.log',
+    '-no-shutdown', '-no-reboot', '-D', meson.source_root() / 'qemu.log',
     '-boot', 'order=d,menu=on,splash-time=100']
 qemu = 'qemu-system-' + arch
 
 if arch == 'x86_64'
     qemu_args += [
         '-M', 'q35,smm=off', '-device', 'isa-debug-exit',
-        '-debugcon', 'file:debug.log', '-enable-kvm',
+        '-debugcon', 'file:'+meson.source_root() / 'debug.log', '-enable-kvm',
         '-M', 'accel=kvm:hvf:whpx:haxm:tcg'
         ]
         ovmf_id = 'X64'
