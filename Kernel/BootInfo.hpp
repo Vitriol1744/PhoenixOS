@@ -8,7 +8,8 @@
 
 #include "limine.h"
 
-static constexpr const uint32_t FRAMEBUFFER_MEMORY_MODEL_RGB = 0x01;
+static constexpr const uint32_t FRAMEBUFFER_MEMORY_MODEL_RGB
+    = LIMINE_FRAMEBUFFER_RGB;
 
 struct Framebuffer
 {
@@ -35,48 +36,36 @@ struct Framebuffer
     }
 };
 
-inline static constexpr const uint32_t MEMORY_MAP_USABLE                 = 0;
-inline static constexpr const uint32_t MEMORY_MAP_RESERVED               = 1;
-inline static constexpr const uint32_t MEMORY_MAP_ACPI_RECLAIMABLE       = 2;
-inline static constexpr const uint32_t MEMORY_MAP_ACPI_NVS               = 3;
-inline static constexpr const uint32_t MEMORY_MAP_BAD_MEMORY             = 4;
-inline static constexpr const uint32_t MEMORY_MAP_BOOTLOADER_RECLAIMABLE = 5;
-inline static constexpr const uint32_t MEMORY_MAP_KERNEL_AND_MODULES     = 6;
-inline static constexpr const uint32_t MEMORY_MAP_FRAMEBUFFER            = 7;
+inline static constexpr const uint32_t MEMORY_MAP_USABLE = LIMINE_MEMMAP_USABLE;
+inline static constexpr const uint32_t MEMORY_MAP_RESERVED
+    = LIMINE_MEMMAP_RESERVED;
+inline static constexpr const uint32_t MEMORY_MAP_ACPI_RECLAIMABLE
+    = LIMINE_MEMMAP_ACPI_RECLAIMABLE;
+inline static constexpr const uint32_t MEMORY_MAP_ACPI_NVS
+    = LIMINE_MEMMAP_ACPI_NVS;
+inline static constexpr const uint32_t MEMORY_MAP_BAD_MEMORY
+    = LIMINE_MEMMAP_BAD_MEMORY;
+inline static constexpr const uint32_t MEMORY_MAP_BOOTLOADER_RECLAIMABLE
+    = LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE;
+inline static constexpr const uint32_t MEMORY_MAP_KERNEL_AND_MODULES
+    = LIMINE_MEMMAP_KERNEL_AND_MODULES;
+inline static constexpr const uint32_t MEMORY_MAP_FRAMEBUFFER
+    = LIMINE_MEMMAP_FRAMEBUFFER;
 
-struct MemoryMapEntry
-{
-    uint64_t base;
-    uint64_t length;
-    uint64_t type;
-};
-
-using MemoryMap = MemoryMapEntry**;
-
-struct CPUInfo
-{
-    uint32_t  cpuID;
-    uint32_t  lapicID;
-    uint64_t  reserved;
-    uintptr_t gotoAddress;
-    uint64_t  extraArgument;
-};
-
-limine_file* findModule(const char* name);
+using MemoryMapEntry = limine_memmap_entry;
+using MemoryMap      = MemoryMapEntry**;
 
 namespace BootInfo
 {
-    extern "C" void Initialize();
-
-    const char*     GetBootloaderName();
-    const char*     GetBootloaderVersion();
-    uint64_t        GetHHDMOffset();
-    Framebuffer*    GetFramebuffer();
-    MemoryMap       GetMemoryMap(uint64_t& entryCount);
-    CPUInfo**       GetCPUInfos(uint32_t& cpuCount);
-    uintptr_t       GetRSDPAddress();
-    uint64_t        GetBootTime();
-    uint64_t        GetKernelPhysicalAddress();
-    uint64_t        GetKernelVirtualAddress();
-    limine_file*    FindModule(const char* name);
+    const char*          GetBootloaderName();
+    const char*          GetBootloaderVersion();
+    uint64_t             GetHHDMOffset();
+    Framebuffer*         GetFramebuffer();
+    limine_smp_response* GetSMP_Response();
+    MemoryMap            GetMemoryMap(uint64_t& entryCount);
+    limine_file*         FindModule(const char* name);
+    uintptr_t            GetRSDPAddress();
+    uint64_t             GetBootTime();
+    uint64_t             GetKernelPhysicalAddress();
+    uint64_t             GetKernelVirtualAddress();
 }; // namespace BootInfo
