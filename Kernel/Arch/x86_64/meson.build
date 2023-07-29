@@ -1,4 +1,5 @@
 srcs += files(
+    'Drivers/IOAPIC.cpp',
     'Drivers/Keyboard.cpp',
     'Drivers/PIC.cpp',
     'Drivers/PS2.cpp',
