@@ -16,12 +16,12 @@ struct AtExitFunctionEntry
     void*              objptr;
 };
 
-constexpr const uint64_t ATEXIT_MAX_FUNCS = 128;
+constexpr const u64 ATEXIT_MAX_FUNCS = 128;
 
 extern "C"
 {
     AtExitFunctionEntry __atexit_funcs[ATEXIT_MAX_FUNCS];
-    uint64_t            __atexit_func_count = 0;
+    u64                 __atexit_func_count = 0;
 
     void*               __dso_handle        = 0;
 
@@ -37,7 +37,7 @@ extern "C"
 
     void __cxa_finalize(void* f)
     {
-        uint64_t i = __atexit_func_count;
+        u64 i = __atexit_func_count;
         if (!f)
         {
             while (i--)
@@ -48,8 +48,8 @@ extern "C"
             return;
         };
 
-        int64_t findex = -1;
-        for (uint64_t j = 0; j < __atexit_func_count; j++)
+        i64 findex = -1;
+        for (u64 j = 0; j < __atexit_func_count; j++)
         {
             if (__atexit_funcs[j].func == f)
             {
@@ -59,7 +59,7 @@ extern "C"
             }
         }
         if (findex < 0) return;
-        for (uint64_t j = findex; j < __atexit_func_count; j++)
+        for (u64 j = findex; j < __atexit_func_count; j++)
         {
             __atexit_funcs[j].func   = __atexit_funcs[j + 1].func;
             __atexit_funcs[j].objptr = __atexit_funcs[j + 1].objptr;
@@ -87,4 +87,11 @@ extern "C"
             Panic("__cxa_guard_abort({})", static_cast<void*>(guard));
         }
     } // namespace __cxxabiv1
+
+    uintptr_t __stack_chk_guard = 0x595e9fbd94fda766;
+    [[noreturn]]
+    void __stack_chk_fail()
+    {
+        Panic("icxxabi: stack smashing detected!");
+    }
 }
