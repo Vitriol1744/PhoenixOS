@@ -6,6 +6,8 @@
  */
 #pragma once
 
+#include "Common.hpp"
+
 #include <limits>
 #include <memory>
 #include <new>
@@ -37,13 +39,13 @@ namespace std
         constexpr reference at(size_type pos)
         {
             // We don't have exceptions, so we have to improvise xd
-            if (pos >= _size) *(char*)0 = 5;
+            Assert(pos < _size);
 
             return _data[pos];
         }
         constexpr const_reference at(size_type pos) const
         {
-            if (pos >= _size) *(char*)0 = 5;
+            Assert(pos < _size);
 
             return _data[pos];
         }
@@ -91,7 +93,8 @@ namespace std
             return const_reverse_iterator(_data);
         }
 
-        [[nodiscard]] constexpr bool empty() const noexcept
+        [[nodiscard]]
+        constexpr bool empty() const noexcept
         {
             return _size == 0;
         }
