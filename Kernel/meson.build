@@ -1,4 +1,5 @@
 srcs += files(
+    'ACPI/ACPI.cpp',
     'Drivers/Terminal.cpp',
     'Memory/KernelHeap.cpp',
     'Memory/PhysicalMemoryManager.cpp',
@@ -15,7 +16,7 @@ srcs += files(
     'VirtualFileSystem/VirtualFileSystem.cpp',
     'BootInfo.cpp',
     'icxxabi.cpp',
-    'KernelStart.cpp',)
+    'KernelStart.cpp')
 
 cxx_args = [
     #'-g',
