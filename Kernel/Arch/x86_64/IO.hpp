@@ -6,6 +6,8 @@
  */
 #pragma once
 
+#include "Common.hpp"
+
 #include "Arch/x86_64/Types.hpp"
 
 #include <stddef.h>
@@ -38,8 +40,8 @@ namespace IO
         return value;
     }
     inline static void Wait() { Out<byte>(0x80, 0x00); }
-    inline static void Delay(size_t microseconds)
+    inline static void Delay(usize microseconds)
     {
-        for (size_t i = 0; i < microseconds; ++i) In<byte>(0x80);
+        for (usize i = 0; i < microseconds; ++i) In<byte>(0x80);
     }
 } // namespace IO
