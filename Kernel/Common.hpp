@@ -14,17 +14,31 @@
 
 #define PH_ARCH_X86_64  BIT(0)
 #define PH_ARCH_AARCH64 BIT(1)
+#define PH_ARCH_RISC_V  BIT(2)
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <cstddef>
+#include <cstdint>
+#include <type_traits>
+
+using usize                    = size_t;
+using isize                    = std::make_signed<size_t>;
+
+using u8                       = uint8_t;
+using u16                      = uint16_t;
+using u32                      = uint32_t;
+using u64                      = uint64_t;
+
+using i8                       = int8_t;
+using i16                      = int16_t;
+using i32                      = int32_t;
+using i64                      = int64_t;
 
 using symbol                   = void*[];
 
 using InterruptHandlerFunction = void (*)(struct CPUContext*);
 
 [[noreturn]]
-PH_UNUSED inline static void halt(struct CPUContext* = nullptr)
+PH_UNUSED inline static void halt(CPUContext* = nullptr)
 {
 #if PH_ARCH == PH_ARCH_X86_64
     while (true) __asm__ volatile("cli; hlt");
@@ -41,12 +55,13 @@ inline void panic(std::string_view msg)
 #if ENABLE_CLEAR_SCREEN_ON_PANIC == true
     Terminal::ClearScreen(0x0000ff);
 #endif
-    Logger::LogChar(BACKGROUND_COLOR_RED);
-    Logger::LogChar(FOREGROUND_COLOR_WHITE);
-    Logger::LogString("Kernel Panic!\n\r");
-    Logger::LogString(msg);
-    Logger::LogChar(RESET_COLOR);
-    Logger::LogString("\n\r");
+    LogFatal("Kernel Panic!\n{}\n", msg.data());
+    //    Logger::LogChar(BACKGROUND_COLOR_RED);
+    //    Logger::LogChar(FOREGROUND_COLOR_WHITE);
+    //    Logger::LogString("Kernel Panic!\n\r");
+    //    Logger::LogString(msg);
+    //    Logger::LogChar(RESET_COLOR);
+    //    Logger::LogString("\n\r");
 
     Stacktrace::Print(16);
     halt(nullptr);
@@ -57,5 +72,5 @@ inline void panic(std::string_view msg)
 #define AssertMsg(expr, msg)                                                   \
     !(expr) ? Panic("Assertion Failed: {}, In File: {}, At Line: {}", msg,     \
                     __FILE__, __LINE__)                                        \
-            : (void)0;
+            : (void)0
 #define ToDo() AssertMsg(false, "Function is not implemented!")
