@@ -22,36 +22,41 @@ namespace MADT
 
     struct LAPICEntry
     {
-        u8  processorID;
-        u8  apicID;
-        u32 flags;
+        Header header;
+        u8     processorID;
+        u8     apicID;
+        u32    flags;
     };
 
     struct IOAPICEntry
     {
-        u8  apicID;
-        u8  reserved;
-        u32 address;
-        u32 gsib;
+        Header header;
+        u8     apicID;
+        u8     reserved;
+        u32    address;
+        u32    gsib;
     };
 
     struct ISOEntry
     {
-        u8  busSource;
-        u8  irqSource;
-        u32 gsi;
-        u16 flags;
+        Header header;
+        u8     busSource;
+        u8     irqSource;
+        u32    gsi;
+        u16    flags;
     };
 
     struct LAPIC_NMIEntry
     {
-        u8  processor;
-        u16 flags;
-        u8  lint;
+        Header header;
+        u8     processor;
+        u16    flags;
+        u8     lint;
     };
 #pragma pack(pop)
 
     void                          Initialize();
+    bool                          LegacyPIC();
 
     std::vector<LAPICEntry*>&     GetLAPICEntries();
     std::vector<IOAPICEntry*>&    GetIOAPICEntries();

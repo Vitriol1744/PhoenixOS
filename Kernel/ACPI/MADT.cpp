@@ -6,8 +6,6 @@
  */
 #include "MADT.hpp"
 
-#include "ACPI/ACPI.hpp"
-
 namespace MADT
 {
     namespace
@@ -20,6 +18,7 @@ namespace MADT
             u8        entries[];
         };
 
+        inline constexpr const char* MADT_SIGNATURE                    = "APIC";
         inline constexpr const u8    ENTRY_TYPE_PROCESSOR_LAPIC        = 0;
         inline constexpr const u8    ENTRY_TYPE_IO_APIC                = 1;
         inline constexpr const u8    ENTRY_TYPE_IO_APIC_ISO            = 2;
@@ -27,6 +26,8 @@ namespace MADT
         inline constexpr const u8    ENTRY_TYPE_LAPIC_NMI              = 4;
         inline constexpr const u8    ENTRY_TYPE_LAPIC_ADDRESS_OVERRIDE = 5;
         inline constexpr const u8    ENTRY_TYPE_PROCESSOR_LOCAL_x2APIC = 6;
+
+        static MADT*                 madt;
 
         std::vector<LAPICEntry*>     lapicEntries;
         std::vector<IOAPICEntry*>    ioapicEntries;
@@ -36,7 +37,7 @@ namespace MADT
 
     void Initialize()
     {
-        MADT* madt = reinterpret_cast<MADT*>(ACPI::GetTable("APIC"));
+        madt = ACPI::GetTable<MADT>(MADT_SIGNATURE);
         Assert(madt != nullptr);
 
         for (usize off = 0; madt->header.length - sizeof(MADT) - off >= 2;)
@@ -80,6 +81,8 @@ namespace MADT
 
         LogTrace("MADT: Initialized");
     }
+
+    bool                          LegacyPIC() { return madt->flags & 0x01; }
 
     std::vector<LAPICEntry*>&     GetLAPICEntries() { return lapicEntries; }
     std::vector<IOAPICEntry*>&    GetIOAPICEntries() { return ioapicEntries; }
