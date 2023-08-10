@@ -6,8 +6,10 @@
  */
 #include "ACPI.hpp"
 
-#include "ACPI/MADT.hpp"
 #include "BootInfo.hpp"
+
+#include "ACPI/MADT.hpp"
+#include "Memory/VirtualMemoryManager.hpp"
 
 namespace ACPI
 {
@@ -38,6 +40,7 @@ namespace ACPI
 
         bool  ValidateChecksum(SDTHeader* header)
         {
+
             u32 checksum = 0;
             for (u32 i = 0; i < header->length; i++)
                 checksum += reinterpret_cast<char*>(header)[i];
@@ -57,10 +60,10 @@ namespace ACPI
             return static_cast<uintptr_t>(ptr[index])
                  + BootInfo::GetHHDMOffset();
         }
-        void PrintACPITables()
+        void DetectACPIEntries()
         {
             const usize entryCount
-                = (rsdt->header.length - sizeof(SDTHeader)) / 4;
+                = (rsdt->header.length - sizeof(SDTHeader)) / (xsdt ? 8 : 4);
             LogInfo("ACPI: Tables count: {}", entryCount);
 
             char acpiSignature[5];
@@ -82,13 +85,17 @@ namespace ACPI
 
     void Initialize()
     {
-        RSDP* rsdp      = reinterpret_cast<RSDP*>(BootInfo::GetRSDPAddress());
-        xsdt            = rsdp->revision == 2 && rsdp->xsdtAddress != 0;
-
+        LogTrace("ACPI: Initializing...");
+        RSDP* rsdp = ToHigherHalfAddress<RSDP*>(BootInfo::GetRSDPAddress());
+        xsdt       = rsdp->revision >= 2 && rsdp->xsdtAddress != 0;
         u64 rsdtPointer = xsdt ? rsdp->xsdtAddress : rsdp->rsdtAddress;
-        rsdt = reinterpret_cast<RSDT*>(rsdtPointer + BootInfo::GetHHDMOffset());
+
+        rsdt            = ToHigherHalfAddress<RSDT*>(rsdtPointer);
         Assert(rsdt != nullptr);
-        PrintACPITables();
+
+        LogInfo("ACPI: Found {} at: {:#x}", xsdt ? "XSDT" : "RSDT",
+                reinterpret_cast<uintptr_t>(rsdt));
+        DetectACPIEntries();
 
         LogTrace("ACPI: Initialized");
         MADT::Initialize();
@@ -97,8 +104,9 @@ namespace ACPI
     {
         Assert(signature != nullptr);
 
-        usize       count      = 0;
-        const usize entryCount = (rsdt->header.length - sizeof(SDTHeader)) / 4;
+        usize       count = 0;
+        const usize entryCount
+            = (rsdt->header.length - sizeof(SDTHeader)) / (xsdt ? 8 : 4);
         for (usize i = 0; i < entryCount; i++)
         {
             SDTHeader* header
