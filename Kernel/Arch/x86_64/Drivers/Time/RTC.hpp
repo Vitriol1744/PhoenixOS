@@ -5,3 +5,20 @@
  * SPDX-License-Identifier: GPL-3
  */
 #pragma once
+
+#include "Common.hpp"
+
+namespace RTC
+{
+    u8   GetCentury();
+    u8   GetYear();
+    u8   GetMonth();
+    u8   GetDay();
+    u8   GetHour();
+    u8   GetMinute();
+    u8   GetSecond();
+
+    u8   GetTime();
+
+    void Sleep(u64 seconds);
+} // namespace RTC
